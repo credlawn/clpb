@@ -1,0 +1,17 @@
+# ignore everything
+/*
+
+# exclude from the ignore filter
+!.gitignore
+!main.go
+!pb_public/
+
+# ignore macOS files
+.DS_Store
+pb_public/.DS_Store
+
+# ignore database and data
+pb_data/
+*.db
+*.db-shm
+*.db-wal
