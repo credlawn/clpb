@@ -21,6 +21,7 @@ func main() {
 	pb_hooks.SetupIPANotification(app)
 	pb_hooks.SetupCaseLoginHook(app)
 	pb_hooks.SetupCallCount(app)
+	pb_hooks.SetupDisableUserCheck(app)
 
 	app.OnRecordCreateExecute("database").BindFunc(func(e *core.RecordEvent) error {
 		mobileNo := e.Record.GetString("mobile_no")
@@ -40,7 +41,20 @@ func main() {
 
 	app.OnServe().Bind(&hook.Handler[*core.ServeEvent]{
 		Func: func(e *core.ServeEvent) error {
-			e.Router.GET("/api/leads/stats", func(c *core.RequestEvent) error {
+		e.Router.GET("/api/leads/stats", func(c *core.RequestEvent) error {
+				info, _ := c.RequestInfo()
+				if info.Auth == nil {
+					return c.JSON(http.StatusUnauthorized, map[string]string{
+						"error": "Unauthorized",
+					})
+				}
+				
+				if info.Auth.GetBool("disabled") {
+					return c.JSON(http.StatusForbidden, map[string]string{
+						"error": "Your account has been disabled. Please contact administrator.",
+					})
+				}
+
 				dateFilter := c.Request.URL.Query().Get("filter")
 				
 				type StatusCount struct {

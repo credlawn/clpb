@@ -1,3 +1,5 @@
+import pb from '../utils/pb.js';
+
 let currentDateFilter = 'today';
 let customStartDate = null;
 let customEndDate = null;
@@ -128,7 +130,50 @@ export async function fetchLeadsStats() {
 
     try {
         const url = `/api/leads/stats${dateFilter ? `?filter=${encodeURIComponent(dateFilter)}` : ''}`;
-        const response = await fetch(url);
+        const response = await fetch(url, {
+            headers: {
+                'Authorization': pb.authStore.token
+            }
+        });
+
+        if (response.status === 403) {
+            pb.authStore.clear();
+
+            const backdrop = document.createElement('div');
+            backdrop.className = 'fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center animate-fade-in';
+
+            const modal = document.createElement('div');
+            modal.className = 'bg-white rounded-xl shadow-2xl p-8 max-w-md mx-4 animate-scale-in';
+            modal.innerHTML = `
+                <div class="text-center">
+                    <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-red-100 mb-4">
+                        <svg class="h-8 w-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-semibold text-gray-900 mb-2">Account Disabled</h3>
+                    <p class="text-gray-600 mb-6">Your account has been disabled. Please contact the administrator for assistance.</p>
+                    <div class="text-sm text-gray-500">Redirecting to login...</div>
+                </div>
+            `;
+
+            backdrop.appendChild(modal);
+            document.body.appendChild(backdrop);
+
+            setTimeout(() => {
+                backdrop.style.animation = 'fade-out 0.3s ease-out';
+                setTimeout(() => {
+                    window.location.href = '/';
+                }, 300);
+            }, 3000);
+
+            return;
+        }
+
+        if (!response.ok) {
+            throw new Error('Failed to fetch stats');
+        }
+
         const stats = await response.json();
 
         document.getElementById('totalLeads').textContent = stats.total || 0;
