@@ -1,4 +1,4 @@
-import { pb } from '../utils/pb.js';
+import pb from '../utils/pb.js';
 import { fetchLeadsStats } from './leads.js';
 
 let excelData = [];

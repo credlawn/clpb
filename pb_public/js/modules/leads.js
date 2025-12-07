@@ -1,9 +1,62 @@
 let currentDateFilter = 'today';
 let customStartDate = null;
 let customEndDate = null;
+let startPicker = null;
+let endPicker = null;
 
 export function setupLeadsCard() {
     setupLeadsFilter();
+    initializeDatePickers();
+}
+
+function initializeDatePickers() {
+    startPicker = flatpickr("#startDatePicker", {
+        dateFormat: "d-m-Y",
+        altInput: true,
+        altFormat: "d-m-Y",
+        maxDate: "today",
+        onChange: function (selectedDates, dateStr) {
+            if (endPicker && dateStr) {
+                endPicker.set('minDate', dateStr);
+            }
+        }
+    });
+
+    endPicker = flatpickr("#endDatePicker", {
+        dateFormat: "d-m-Y",
+        altInput: true,
+        altFormat: "d-m-Y",
+        maxDate: "today"
+    });
+
+    document.getElementById('cancelDateRange').addEventListener('click', () => {
+        document.getElementById('dateRangeModal').classList.add('hidden');
+        startPicker.clear();
+        endPicker.clear();
+    });
+
+    document.getElementById('applyDateRange').addEventListener('click', () => {
+        const startDate = startPicker.selectedDates[0];
+        const endDate = endPicker.selectedDates[0];
+
+        if (startDate && endDate) {
+            customStartDate = startPicker.formatDate(startDate, 'Y-m-d');
+            customEndDate = endPicker.formatDate(endDate, 'Y-m-d');
+            currentDateFilter = 'custom';
+
+            const filterLabel = document.getElementById('leadsFilterLabel');
+            const displayStart = startPicker.formatDate(startDate, 'd-m-Y');
+            const displayEnd = endPicker.formatDate(endDate, 'd-m-Y');
+            filterLabel.textContent = `(${displayStart} to ${displayEnd})`;
+
+            document.getElementById('dateRangeModal').classList.add('hidden');
+            document.getElementById('leadsFilterMenu').classList.add('hidden');
+
+            fetchLeadsStats();
+        } else {
+            alert('Please select both start and end dates');
+        }
+    });
 }
 
 function setupLeadsFilter() {
@@ -27,17 +80,8 @@ function setupLeadsFilter() {
             const filter = e.target.dataset.filter;
 
             if (filter === 'custom') {
-                const startDate = prompt('Start Date (YYYY-MM-DD):');
-                const endDate = prompt('End Date (YYYY-MM-DD):');
-
-                if (startDate && endDate) {
-                    customStartDate = startDate;
-                    customEndDate = endDate;
-                    currentDateFilter = 'custom';
-                    filterLabel.textContent = `(${startDate} to ${endDate})`;
-                } else {
-                    return;
-                }
+                document.getElementById('dateRangeModal').classList.remove('hidden');
+                return;
             } else {
                 currentDateFilter = filter;
                 if (filter === 'all') {

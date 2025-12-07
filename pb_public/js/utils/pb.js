@@ -1,1 +1,2 @@
-export const pb = new PocketBase(window.location.origin);
+const pb = new window.PocketBase(window.location.origin);
+export default pb;

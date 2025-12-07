@@ -1,4 +1,4 @@
-import { pb } from './pb.js';
+import pb from './pb.js';
 
 export function checkAuth() {
     if (!pb.authStore.isValid) {

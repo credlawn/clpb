@@ -12,7 +12,7 @@ export function renderSidebar() {
             </div>
 
             <nav class="flex-1 p-3 space-y-1 overflow-y-auto">
-                <a href="#" class="flex items-center space-x-2 px-3 py-2 bg-blue-50 text-blue-700 rounded-lg text-sm font-medium">
+                <a href="/dashboard.html" class="flex items-center space-x-2 px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg text-sm font-medium">
                     <i data-feather="home" class="w-4 h-4 flex-shrink-0"></i>
                     <span class="sidebar-text">Dashboard</span>
                 </a>
@@ -22,8 +22,8 @@ export function renderSidebar() {
                     <span class="sidebar-text">Employees</span>
                 </a>
 
-                <a href="#" class="flex items-center space-x-2 px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg text-sm font-medium">
-                    <i data-feather="book" class="w-4 h-4 flex-shrink-0"></i>
+                <a href="/leads.html" class="flex items-center space-x-2 px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg text-sm font-medium">
+                    <i data-feather="list" class="w-4 h-4 flex-shrink-0"></i>
                     <span class="sidebar-text">Leads</span>
                 </a>
 

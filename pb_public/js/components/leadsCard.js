@@ -132,5 +132,27 @@ export function renderLeadsCard() {
                 </div>
             </div>
         </div>
+
+        <div id="dateRangeModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+            <div class="bg-white rounded-xl shadow-2xl w-full max-w-md">
+                <div class="p-4 border-b border-gray-200">
+                    <h3 class="text-lg font-bold text-gray-900">Select Date Range</h3>
+                </div>
+                <div class="p-4 space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Start Date</label>
+                        <input type="text" id="startDatePicker" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Select start date">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">End Date</label>
+                        <input type="text" id="endDatePicker" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Select end date">
+                    </div>
+                </div>
+                <div class="p-4 border-t border-gray-200 flex justify-end space-x-2">
+                    <button id="cancelDateRange" class="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">Cancel</button>
+                    <button id="applyDateRange" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors">Apply</button>
+                </div>
+            </div>
+        </div>
     `;
 }

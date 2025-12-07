@@ -1,87 +1,95 @@
-import { pb } from './js/utils/pb.js';
+import pb from './js/utils/pb.js';
 
-const loginForm = document.getElementById('loginForm');
-const emailInput = document.getElementById('email');
-const passwordInput = document.getElementById('password');
-const loginButton = document.getElementById('loginButton');
-const errorMessage = document.getElementById('errorMessage');
-const buttonText = document.getElementById('buttonText');
-const buttonLoader = document.getElementById('buttonLoader');
+console.log('app.js loaded, pb:', pb);
 
-function showError(message) {
-    errorMessage.textContent = message;
-    errorMessage.classList.remove('hidden');
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('DOMContentLoaded fired');
+    const loginForm = document.getElementById('loginForm');
+    console.log('loginForm element:', loginForm);
+    const emailInput = document.getElementById('email');
+    const passwordInput = document.getElementById('password');
+    const loginButton = document.getElementById('loginButton');
+    const errorMessage = document.getElementById('errorMessage');
+    const buttonText = document.getElementById('buttonText');
+    const buttonLoader = document.getElementById('buttonLoader');
 
-    setTimeout(() => {
-        errorMessage.classList.add('hidden');
-    }, 5000);
-}
+    function showError(message) {
+        errorMessage.textContent = message;
+        errorMessage.classList.remove('hidden');
 
-function setLoading(isLoading) {
-    if (isLoading) {
-        loginButton.disabled = true;
-        buttonText.classList.add('invisible');
-        buttonLoader.classList.remove('hidden');
-        emailInput.disabled = true;
-        passwordInput.disabled = true;
-    } else {
-        loginButton.disabled = false;
-        buttonText.classList.remove('invisible');
-        buttonLoader.classList.add('hidden');
-        emailInput.disabled = false;
-        passwordInput.disabled = false;
-    }
-}
-
-loginForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-
-    const email = emailInput.value.trim();
-    const password = passwordInput.value;
-
-    if (!email || !password) {
-        showError('Please enter both email and password');
-        return;
+        setTimeout(() => {
+            errorMessage.classList.add('hidden');
+        }, 5000);
     }
 
-    setLoading(true);
-    errorMessage.classList.add('hidden');
+    function setLoading(isLoading) {
+        if (isLoading) {
+            loginButton.disabled = true;
+            buttonText.classList.add('invisible');
+            buttonLoader.classList.remove('hidden');
+            emailInput.disabled = true;
+            passwordInput.disabled = true;
+        } else {
+            loginButton.disabled = false;
+            buttonText.classList.remove('invisible');
+            buttonLoader.classList.add('hidden');
+            emailInput.disabled = false;
+            passwordInput.disabled = false;
+        }
+    }
 
-    try {
-        const authData = await pb.collection('users').authWithPassword(email, password);
+    console.log('About to add submit event listener');
+    loginForm.addEventListener('submit', async (e) => {
+        console.log('Submit event fired!');
+        e.preventDefault();
 
-        const userRole = (authData.record.role || '').toLowerCase();
+        const email = emailInput.value.trim();
+        const password = passwordInput.value;
 
-        if (userRole !== 'manager') {
-            pb.authStore.clear();
-            showError('Access denied. Manager login only.');
-            setLoading(false);
+        if (!email || !password) {
+            showError('Please enter both email and password');
             return;
         }
 
-        window.location.href = '/dashboard.html';
+        setLoading(true);
+        errorMessage.classList.add('hidden');
 
-    } catch (error) {
-        console.error('Login error:', error);
+        try {
+            const authData = await pb.collection('users').authWithPassword(email, password);
 
-        let errorMsg = 'Login failed. Please try again.';
+            const userRole = (authData.record.role || '').toLowerCase();
 
-        if (error.status === 400) {
-            errorMsg = 'Invalid email or password';
-        } else if (error.status === 0) {
-            errorMsg = 'Cannot connect to server';
-        } else if (error.message) {
-            errorMsg = error.message;
+            if (userRole !== 'manager') {
+                pb.authStore.clear();
+                showError('Access denied. Manager login only.');
+                setLoading(false);
+                return;
+            }
+
+            window.location.href = '/dashboard.html';
+
+        } catch (error) {
+            console.error('Login error:', error);
+
+            let errorMsg = 'Login failed. Please try again.';
+
+            if (error.status === 400) {
+                errorMsg = 'Invalid email or password';
+            } else if (error.status === 0) {
+                errorMsg = 'Cannot connect to server';
+            } else if (error.message) {
+                errorMsg = error.message;
+            }
+
+            showError(errorMsg);
+            setLoading(false);
         }
+    });
 
-        showError(errorMsg);
-        setLoading(false);
+    if (pb.authStore.isValid) {
+        const userRole = (pb.authStore.model.role || '').toLowerCase();
+        if (userRole === 'manager') {
+            window.location.href = '/dashboard.html';
+        }
     }
 });
-
-if (pb.authStore.isValid) {
-    const userRole = (pb.authStore.model.role || '').toLowerCase();
-    if (userRole === 'manager') {
-        window.location.href = '/dashboard.html';
-    }
-}

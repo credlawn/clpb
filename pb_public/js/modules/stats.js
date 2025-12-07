@@ -1,4 +1,4 @@
-import { pb } from '../utils/pb.js';
+import pb from '../utils/pb.js';
 
 export async function fetchOtherStats() {
     try {
