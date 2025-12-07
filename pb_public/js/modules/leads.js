@@ -1,65 +1,14 @@
 import pb from '../utils/pb.js';
+import { openCustomDateModal } from './customDateModal.js';
 
 let currentDateFilter = 'today';
 let customStartDate = null;
 let customEndDate = null;
-let startPicker = null;
-let endPicker = null;
 
 export function setupLeadsCard() {
     setupLeadsFilter();
-    initializeDatePickers();
 }
 
-function initializeDatePickers() {
-    startPicker = flatpickr("#startDatePicker", {
-        dateFormat: "d-m-Y",
-        altInput: true,
-        altFormat: "d-m-Y",
-        maxDate: "today",
-        onChange: function (selectedDates, dateStr) {
-            if (endPicker && dateStr) {
-                endPicker.set('minDate', dateStr);
-            }
-        }
-    });
-
-    endPicker = flatpickr("#endDatePicker", {
-        dateFormat: "d-m-Y",
-        altInput: true,
-        altFormat: "d-m-Y",
-        maxDate: "today"
-    });
-
-    document.getElementById('cancelDateRange').addEventListener('click', () => {
-        document.getElementById('dateRangeModal').classList.add('hidden');
-        startPicker.clear();
-        endPicker.clear();
-    });
-
-    document.getElementById('applyDateRange').addEventListener('click', () => {
-        const startDate = startPicker.selectedDates[0];
-        const endDate = endPicker.selectedDates[0];
-
-        if (startDate && endDate) {
-            customStartDate = startPicker.formatDate(startDate, 'Y-m-d');
-            customEndDate = endPicker.formatDate(endDate, 'Y-m-d');
-            currentDateFilter = 'custom';
-
-            const filterLabel = document.getElementById('leadsFilterLabel');
-            const displayStart = startPicker.formatDate(startDate, 'd-m-Y');
-            const displayEnd = endPicker.formatDate(endDate, 'd-m-Y');
-            filterLabel.textContent = `(${displayStart} to ${displayEnd})`;
-
-            document.getElementById('dateRangeModal').classList.add('hidden');
-            document.getElementById('leadsFilterMenu').classList.add('hidden');
-
-            fetchLeadsStats();
-        } else {
-            alert('Please select both start and end dates');
-        }
-    });
-}
 
 function setupLeadsFilter() {
     const filterBtn = document.getElementById('leadsFilterBtn');
@@ -82,7 +31,20 @@ function setupLeadsFilter() {
             const filter = e.target.dataset.filter;
 
             if (filter === 'custom') {
-                document.getElementById('dateRangeModal').classList.remove('hidden');
+                filterMenu.classList.add('hidden');
+                openCustomDateModal((startDate, endDate) => {
+                    customStartDate = startDate;
+                    customEndDate = endDate;
+                    currentDateFilter = 'custom';
+
+                    const formatDate = (dateStr) => {
+                        const [year, month, day] = dateStr.split('-');
+                        return `${day}-${month}-${year.slice(2)}`;
+                    };
+
+                    filterLabel.textContent = `(${formatDate(startDate)} to ${formatDate(endDate)})`;
+                    fetchLeadsStats();
+                });
                 return;
             } else {
                 currentDateFilter = filter;
@@ -90,6 +52,8 @@ function setupLeadsFilter() {
                     filterLabel.textContent = '';
                 } else if (filter === 'today') {
                     filterLabel.textContent = '(Today)';
+                } else if (filter === 'yesterday') {
+                    filterLabel.textContent = '(Yesterday)';
                 } else if (filter === 'month') {
                     filterLabel.textContent = '(This Month)';
                 }
@@ -110,6 +74,12 @@ function getDateFilter() {
         const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
         const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
         return `lead_status_date >= "${startOfDay.toISOString()}" AND lead_status_date <= "${endOfDay.toISOString()}"`;
+    } else if (currentDateFilter === 'yesterday') {
+        const yesterday = new Date(now);
+        yesterday.setDate(yesterday.getDate() - 1);
+        const startOfDay = new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate());
+        const endOfDay = new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate(), 23, 59, 59);
+        return `lead_status_date >= "${startOfDay.toISOString()}" AND lead_status_date <= "${endOfDay.toISOString()}"`;
     } else if (currentDateFilter === 'month') {
         const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
         const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
@@ -122,6 +92,8 @@ function getDateFilter() {
 
     return '';
 }
+
+export { getDateFilter };
 
 export async function fetchLeadsStats() {
     const dateFilter = getDateFilter();
@@ -188,6 +160,11 @@ export async function fetchLeadsStats() {
         document.getElementById('leadsNotEligible').textContent = stats.not_eligible || 0;
         document.getElementById('leadsFollowUp').textContent = stats.follow_up || 0;
 
+        const totalExceptNew = (stats.called || 0) + (stats.cnr || 0) + (stats.denied || 0) +
+            (stats.ip_approved || 0) + (stats.ip_decline || 0) + (stats.no_docs || 0) +
+            (stats.already_carded || 0) + (stats.not_eligible || 0) + (stats.follow_up || 0);
+        document.getElementById('leadsTotal').textContent = totalExceptNew > 0 ? totalExceptNew : '-';
+
         calculatePercentages(stats);
 
     } catch (error) {
@@ -230,32 +207,32 @@ function calculatePercentages(stats) {
     document.getElementById('leadsFollowUpPct').textContent = '';
 
     if (sumExceptNew > 0) {
-        const cnrPct = ((counts.cnr / sumExceptNew) * 100).toFixed(1);
+        const cnrPct = ((counts.cnr / sumExceptNew) * 100).toFixed(0);
         document.getElementById('leadsCNRPct').textContent = `${cnrPct}%`;
     }
 
     if (sumExceptNewCNR > 0) {
-        const deniedPct = ((counts.denied / sumExceptNewCNR) * 100).toFixed(1);
+        const deniedPct = ((counts.denied / sumExceptNewCNR) * 100).toFixed(0);
         document.getElementById('leadsDeniedPct').textContent = `${deniedPct}%`;
 
-        const noDocsPct = ((counts.noDocs / sumExceptNewCNR) * 100).toFixed(1);
+        const noDocsPct = ((counts.noDocs / sumExceptNewCNR) * 100).toFixed(0);
         document.getElementById('leadsNoDocsPct').textContent = `${noDocsPct}%`;
 
-        const alreadyCardedPct = ((counts.alreadyCarded / sumExceptNewCNR) * 100).toFixed(1);
+        const alreadyCardedPct = ((counts.alreadyCarded / sumExceptNewCNR) * 100).toFixed(0);
         document.getElementById('leadsAlreadyCardedPct').textContent = `${alreadyCardedPct}%`;
 
-        const notEligiblePct = ((counts.notEligible / sumExceptNewCNR) * 100).toFixed(1);
+        const notEligiblePct = ((counts.notEligible / sumExceptNewCNR) * 100).toFixed(0);
         document.getElementById('leadsNotEligiblePct').textContent = `${notEligiblePct}%`;
 
-        const followUpPct = ((counts.followUp / sumExceptNewCNR) * 100).toFixed(1);
+        const followUpPct = ((counts.followUp / sumExceptNewCNR) * 100).toFixed(0);
         document.getElementById('leadsFollowUpPct').textContent = `${followUpPct}%`;
     }
 
     if (ipTotal > 0) {
-        const ipApprovedPct = ((counts.ipApproved / ipTotal) * 100).toFixed(1);
+        const ipApprovedPct = ((counts.ipApproved / ipTotal) * 100).toFixed(0);
         document.getElementById('leadsIPApprovedPct').textContent = `${ipApprovedPct}%`;
 
-        const ipDeclinePct = ((counts.ipDecline / ipTotal) * 100).toFixed(1);
+        const ipDeclinePct = ((counts.ipDecline / ipTotal) * 100).toFixed(0);
         document.getElementById('leadsIPDeclinePct').textContent = `${ipDeclinePct}%`;
     }
 }

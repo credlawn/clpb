@@ -1,12 +1,14 @@
 import { checkAuth, displayUserInfo, setupLogout } from './utils/auth.js';
 import { setupSidebarToggle } from './utils/ui.js';
 import { setupLeadsCard, fetchLeadsStats } from './modules/leads.js';
-import { fetchOtherStats } from './modules/stats.js';
 import { setupImportModal } from './modules/import.js';
 import { renderSidebar } from './components/sidebar.js';
 import { renderLeadsCard } from './components/leadsCard.js';
-import { renderStatsCards } from './components/statsCards.js';
 import { renderImportModal } from './components/importModal.js';
+import { createEmployeeStatsCard } from './components/employeeComponents.js';
+import { fetchEmployeeStats, setupEmployeeFilter } from './modules/employeeStats.js';
+import { createCustomDateModal } from './components/customDateModal.js';
+import { setupCustomDateModal } from './modules/customDateModal.js';
 
 let refreshInterval = null;
 const refreshFunctions = [];
@@ -60,21 +62,30 @@ document.addEventListener('visibilitychange', () => {
 
 if (checkAuth()) {
     document.getElementById('sidebarContainer').innerHTML = renderSidebar();
-    document.getElementById('statsGrid').innerHTML = renderLeadsCard() + renderStatsCards();
     document.getElementById('importModalContainer').innerHTML = renderImportModal();
+    document.body.insertAdjacentHTML('beforeend', createCustomDateModal());
 
-    const setupUI = () => {
+    async function setupUI() {
+        const statsGrid = document.getElementById('statsGrid');
+
+        statsGrid.innerHTML = renderLeadsCard() + createEmployeeStatsCard();
+
         displayUserInfo();
         setupSidebarToggle();
         setupLogout();
-        setupLeadsCard();
         setupImportModal();
+
         feather.replace();
 
+        setupLeadsCard();
+        setupEmployeeFilter();
+        setupCustomDateModal();
+
         registerAutoRefresh(fetchLeadsStats);
+        registerAutoRefresh(fetchEmployeeStats);
 
         fetchLeadsStats();
-        fetchOtherStats();
+        fetchEmployeeStats();
         startAutoRefresh();
     };
 

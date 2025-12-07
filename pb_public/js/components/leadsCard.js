@@ -1,156 +1,106 @@
 export function renderLeadsCard() {
     return `
-        <div class="bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
-            <div class="p-4 border-b border-gray-100">
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center space-x-2">
-                        <h3 class="text-xl font-bold text-gray-900" id="totalLeads">0</h3>
-                        <span class="text-sm text-gray-500">Leads</span>
-                        <span class="text-xs text-gray-400" id="leadsFilterLabel">(Today)</span>
-                    </div>
-                    <div class="relative">
-                        <button id="leadsFilterBtn" class="p-1.5 hover:bg-gray-100 rounded-lg transition-colors">
-                            <i data-feather="filter" class="w-4 h-4 text-gray-600"></i>
-                        </button>
-                        <div id="leadsFilterMenu" class="hidden absolute left-1/2 transform -translate-x-1/2 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
-                            <div class="py-1">
-                                <button class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-filter="all">All Time</button>
-                                <button class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-filter="today">Today</button>
-                                <button class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-filter="month">This Month</button>
-                                <button class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-filter="custom">Custom Date</button>
-                            </div>
+        <div class="bg-white rounded-lg shadow-md p-4 col-span-1 md:col-span-1 lg:col-span-1">
+            <div class="flex items-center justify-between mb-3">
+                <div class="flex items-center space-x-2">
+                    <h3 class="text-base font-semibold text-gray-900" id="totalLeads">0</h3>
+                    <span class="text-sm text-gray-600">Leads</span>
+                    <span class="text-xs text-gray-600" id="leadsFilterLabel">(Today)</span>
+                </div>
+                <div class="relative">
+                    <button id="leadsFilterBtn" class="p-1.5 hover:bg-gray-100 rounded-lg transition-colors flex items-center gap-1.5">
+                        <i data-feather="filter" class="w-4 h-4 text-gray-600"></i>
+                    </button>
+                    <div id="leadsFilterMenu" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
+                        <div class="py-1">
+                            <button data-filter="all" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">All Time</button>
+                            <button data-filter="today" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Today</button>
+                            <button data-filter="yesterday" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Yesterday</button>
+                            <button data-filter="month" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">This Month</button>
+                            <button data-filter="custom" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Custom Range</button>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div id="leadsBreakdown" class="bg-gray-50">
-                <div class="p-4 space-y-2">
-                    <div class="flex items-center justify-between p-2 bg-white rounded-lg hover:bg-blue-50 transition-colors">
-                        <div class="flex items-center space-x-2">
-                            <div class="w-2 h-2 bg-blue-500 rounded-full"></div>
-                            <span class="text-sm font-medium text-gray-700">New</span>
-                        </div>
-                        <span class="text-sm font-bold text-gray-900" id="leadsNew">0</span>
-                    </div>
+            <div class="space-y-0">
+                <div class="flex items-center justify-between py-2 px-3 border-b border-gray-200">
+                    <span class="text-sm text-gray-700">New</span>
+                    <span class="text-sm font-semibold text-blue-600" id="leadsNew">0</span>
+                </div>
 
-                    <div class="flex items-center justify-between p-2 bg-white rounded-lg hover:bg-green-50 transition-colors">
-                        <div class="flex items-center space-x-2">
-                            <div class="w-2 h-2 bg-green-500 rounded-full"></div>
-                            <span class="text-sm font-medium text-gray-700">Called</span>
-                        </div>
-                        <span class="text-sm font-bold text-gray-900" id="leadsCalled">0</span>
-                    </div>
+                <div class="flex items-center justify-between py-2 px-3 border-b border-gray-200">
+                    <span class="text-sm text-gray-700">Called</span>
+                    <span class="text-sm font-semibold text-green-600" id="leadsCalled">0</span>
+                </div>
 
-                    <div class="flex items-center justify-between p-2 bg-white rounded-lg hover:bg-yellow-50 transition-colors">
-                        <div class="flex items-center space-x-2">
-                            <div class="w-2 h-2 bg-yellow-500 rounded-full"></div>
-                            <span class="text-sm font-medium text-gray-700">CNR</span>
-                        </div>
-                        <div class="flex items-center space-x-3">
-                            <span class="text-xs text-gray-500" id="leadsCNRPct"></span>
-                            <span class="text-sm font-bold text-gray-900" id="leadsCNR">0</span>
-                        </div>
-                    </div>
-
-                    <div class="flex items-center justify-between p-2 bg-white rounded-lg hover:bg-red-50 transition-colors">
-                        <div class="flex items-center space-x-2">
-                            <div class="w-2 h-2 bg-red-500 rounded-full"></div>
-                            <span class="text-sm font-medium text-gray-700">Denied</span>
-                        </div>
-                        <div class="flex items-center space-x-3">
-                            <span class="text-xs text-gray-500" id="leadsDeniedPct"></span>
-                            <span class="text-sm font-bold text-gray-900" id="leadsDenied">0</span>
-                        </div>
-                    </div>
-
-                    <div class="flex items-center justify-between p-2 bg-white rounded-lg hover:bg-green-50 transition-colors">
-                        <div class="flex items-center space-x-2">
-                            <div class="w-2 h-2 bg-green-600 rounded-full"></div>
-                            <span class="text-sm font-medium text-green-600">IP Approved</span>
-                        </div>
-                        <div class="flex items-center space-x-3">
-                            <span class="text-xs text-green-600" id="leadsIPApprovedPct"></span>
-                            <span class="text-sm font-bold text-green-600" id="leadsIPApproved">0</span>
-                        </div>
-                    </div>
-
-                    <div class="flex items-center justify-between p-2 bg-white rounded-lg hover:bg-red-50 transition-colors">
-                        <div class="flex items-center space-x-2">
-                            <div class="w-2 h-2 bg-red-600 rounded-full"></div>
-                            <span class="text-sm font-medium text-red-600">IP Decline</span>
-                        </div>
-                        <div class="flex items-center space-x-3">
-                            <span class="text-xs text-red-600" id="leadsIPDeclinePct"></span>
-                            <span class="text-sm font-bold text-red-600" id="leadsIPDecline">0</span>
-                        </div>
-                    </div>
-
-                    <div class="flex items-center justify-between p-2 bg-white rounded-lg hover:bg-orange-50 transition-colors">
-                        <div class="flex items-center space-x-2">
-                            <div class="w-2 h-2 bg-red-500 rounded-full"></div>
-                            <span class="text-sm font-medium text-gray-700">No Docs</span>
-                        </div>
-                        <div class="flex items-center space-x-3">
-                            <span class="text-xs text-gray-500" id="leadsNoDocsPct"></span>
-                            <span class="text-sm font-bold text-gray-900" id="leadsNoDocs">0</span>
-                        </div>
-                    </div>
-
-                    <div class="flex items-center justify-between p-2 bg-white rounded-lg hover:bg-purple-50 transition-colors">
-                        <div class="flex items-center space-x-2">
-                            <div class="w-2 h-2 bg-purple-500 rounded-full"></div>
-                            <span class="text-sm font-medium text-gray-700">Already Carded</span>
-                        </div>
-                        <div class="flex items-center space-x-3">
-                            <span class="text-xs text-gray-500" id="leadsAlreadyCardedPct"></span>
-                            <span class="text-sm font-bold text-gray-900" id="leadsAlreadyCarded">0</span>
-                        </div>
-                    </div>
-
-                    <div class="flex items-center justify-between p-2 bg-white rounded-lg hover:bg-gray-100 transition-colors">
-                        <div class="flex items-center space-x-2">
-                            <div class="w-2 h-2 bg-gray-500 rounded-full"></div>
-                            <span class="text-sm font-medium text-gray-700">Not Eligible</span>
-                        </div>
-                        <div class="flex items-center space-x-3">
-                            <span class="text-xs text-gray-500" id="leadsNotEligiblePct"></span>
-                            <span class="text-sm font-bold text-gray-900" id="leadsNotEligible">0</span>
-                        </div>
-                    </div>
-
-                    <div class="flex items-center justify-between p-2 bg-white rounded-lg hover:bg-indigo-50 transition-colors">
-                        <div class="flex items-center space-x-2">
-                            <div class="w-2 h-2 bg-indigo-500 rounded-full"></div>
-                            <span class="text-sm font-medium text-gray-700">Follow Up</span>
-                        </div>
-                        <div class="flex items-center space-x-3">
-                            <span class="text-xs text-gray-500" id="leadsFollowUpPct"></span>
-                            <span class="text-sm font-bold text-gray-900" id="leadsFollowUp">0</span>
-                        </div>
+                <div class="flex items-center justify-between py-2 px-3 border-b border-gray-200">
+                    <span class="text-sm text-gray-700">CNR</span>
+                    <div class="flex items-center gap-2">
+                        <span class="text-gray-400" style="font-size: 10px;" id="leadsCNRPct"></span>
+                        <span class="text-sm font-semibold text-yellow-600" id="leadsCNR">0</span>
                     </div>
                 </div>
-            </div>
-        </div>
 
-        <div id="dateRangeModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-            <div class="bg-white rounded-xl shadow-2xl w-full max-w-md">
-                <div class="p-4 border-b border-gray-200">
-                    <h3 class="text-lg font-bold text-gray-900">Select Date Range</h3>
-                </div>
-                <div class="p-4 space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Start Date</label>
-                        <input type="text" id="startDatePicker" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Select start date">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">End Date</label>
-                        <input type="text" id="endDatePicker" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Select end date">
+                <div class="flex items-center justify-between py-2 px-3 border-b border-gray-200">
+                    <span class="text-sm text-gray-700">Denied</span>
+                    <div class="flex items-center gap-2">
+                        <span class="text-gray-400" style="font-size: 10px;" id="leadsDeniedPct"></span>
+                        <span class="text-sm font-semibold text-red-600" id="leadsDenied">0</span>
                     </div>
                 </div>
-                <div class="p-4 border-t border-gray-200 flex justify-end space-x-2">
-                    <button id="cancelDateRange" class="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">Cancel</button>
-                    <button id="applyDateRange" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors">Apply</button>
+
+                <div class="flex items-center justify-between py-2 px-3 border-b border-gray-200">
+                    <span class="text-sm font-semibold text-green-700">IP Approved</span>
+                    <div class="flex items-center gap-2">
+                        <span class="text-green-600" style="font-size: 10px;" id="leadsIPApprovedPct"></span>
+                        <span class="text-sm font-semibold text-green-700" id="leadsIPApproved">0</span>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between py-2 px-3 border-b border-gray-200">
+                    <span class="text-sm font-semibold text-red-700">IP Decline</span>
+                    <div class="flex items-center gap-2">
+                        <span class="text-red-600" style="font-size: 10px;" id="leadsIPDeclinePct"></span>
+                        <span class="text-sm font-semibold text-red-700" id="leadsIPDecline">0</span>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between py-2 px-3 border-b border-gray-200">
+                    <span class="text-sm text-gray-700">No Docs</span>
+                    <div class="flex items-center gap-2">
+                        <span class="text-gray-400" style="font-size: 10px;" id="leadsNoDocsPct"></span>
+                        <span class="text-sm font-semibold text-orange-600" id="leadsNoDocs">0</span>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between py-2 px-3 border-b border-gray-200">
+                    <span class="text-sm text-gray-700">Already Carded</span>
+                    <div class="flex items-center gap-2">
+                        <span class="text-gray-400" style="font-size: 10px;" id="leadsAlreadyCardedPct"></span>
+                        <span class="text-sm font-semibold text-purple-600" id="leadsAlreadyCarded">0</span>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between py-2 px-3 border-b border-gray-200">
+                    <span class="text-sm text-gray-700">Not Eligible</span>
+                    <div class="flex items-center gap-2">
+                        <span class="text-gray-400" style="font-size: 10px;" id="leadsNotEligiblePct"></span>
+                        <span class="text-sm font-semibold text-gray-600" id="leadsNotEligible">0</span>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between py-2 px-3 border-b border-gray-200">
+                    <span class="text-sm text-gray-700">Follow Up</span>
+                    <div class="flex items-center gap-2">
+                        <span class="text-gray-400" style="font-size: 10px;" id="leadsFollowUpPct"></span>
+                        <span class="text-sm font-semibold text-indigo-600" id="leadsFollowUp">0</span>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between py-2 px-3 bg-gray-100 font-bold border-t-2 border-gray-300">
+                    <span class="text-sm text-gray-900">Total</span>
+                    <span class="text-sm text-blue-700" id="leadsTotal">0</span>
                 </div>
             </div>
         </div>
