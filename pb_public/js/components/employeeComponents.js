@@ -6,7 +6,7 @@ export function createEmployeeStatsCard() {
                 <div class="relative">
                     <button id="employeeFilterBtn" class="p-1.5 hover:bg-gray-100 rounded-lg transition-colors flex items-center gap-1.5">
                         <i data-feather="filter" class="w-4 h-4 text-gray-600"></i>
-                        <span id="employeeFilterLabel" class="text-xs text-gray-600">All Time</span>
+                        <span id="employeeFilterLabel" class="text-xs text-gray-600">(Today)</span>
                     </button>
                     
                     <div id="employeeFilterMenu" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-10">

@@ -1,7 +1,7 @@
 import pb from '../utils/pb.js';
 import { openCustomDateModal } from './customDateModal.js';
 
-let currentEmployeeFilter = 'all';
+let currentEmployeeFilter = 'today';
 let employeeCustomStartDate = '';
 let employeeCustomEndDate = '';
 
@@ -33,7 +33,13 @@ export function setupEmployeeFilter() {
                     employeeCustomStartDate = startDate;
                     employeeCustomEndDate = endDate;
                     currentEmployeeFilter = 'custom';
-                    filterLabel.textContent = `${startDate} to ${endDate}`;
+
+                    const formatDate = (dateStr) => {
+                        const [year, month, day] = dateStr.split('-');
+                        return `${day}-${month}-${year.slice(2)}`;
+                    };
+
+                    filterLabel.textContent = `(${formatDate(startDate)} to ${formatDate(endDate)})`;
                     fetchEmployeeStats();
                 });
                 return;
@@ -41,14 +47,16 @@ export function setupEmployeeFilter() {
 
             currentEmployeeFilter = filter;
 
-            const labels = {
-                'all': 'All Time',
-                'today': 'Today',
-                'yesterday': 'Yesterday',
-                'month': 'This Month'
-            };
+            if (filter === 'all') {
+                filterLabel.textContent = '';
+            } else if (filter === 'today') {
+                filterLabel.textContent = '(Today)';
+            } else if (filter === 'yesterday') {
+                filterLabel.textContent = '(Yesterday)';
+            } else if (filter === 'month') {
+                filterLabel.textContent = '(This Month)';
+            }
 
-            filterLabel.textContent = labels[filter] || 'All Time';
             filterMenu.classList.add('hidden');
 
             await fetchEmployeeStats();
