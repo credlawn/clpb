@@ -158,6 +158,8 @@ if (checkAuth()) {
 
         registerAutoRefresh(loadLeadsData);
         registerAutoRefresh(loadEmployeeData);
+        registerAutoRefresh(fetchLeadsStats);
+        registerAutoRefresh(fetchEmployeeStats);
 
         await Promise.all([loadLeadsData(), loadEmployeeData()]);
 

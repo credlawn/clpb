@@ -1,21 +1,21 @@
 export function createEmployeeStatsCard() {
     return `
-        <div class="bg-white rounded-lg shadow-md p-4 col-span-1 md:col-span-1 lg:col-span-2">
+        <div class="bg-white rounded-lg p-4">
             <div class="flex items-center justify-between mb-3">
-                <h2 class="text-base font-semibold text-gray-800">Employee Performance</h2>
+                <span class="text-base font-semibold text-gray-800">Employee Performance</span>
                 <div class="relative">
-                    <button id="employeeFilterBtn" class="p-1.5 hover:bg-gray-100 rounded-lg transition-colors flex items-center gap-1.5">
-                        <i data-feather="filter" class="w-4 h-4 text-gray-600"></i>
-                        <span id="employeeFilterLabel" class="text-xs text-gray-600">(Today)</span>
+                    <button id="employeeFilterBtn" class="p-1.5 hover:bg-gray-100 rounded transition-colors flex items-center gap-1">
+                        <i data-feather="filter" class="w-4 h-4 text-gray-500"></i>
+                        <span id="employeeFilterLabel" class="text-sm text-gray-400">(Today)</span>
                     </button>
                     
-                    <div id="employeeFilterMenu" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
-                        <div class="py-1">
-                            <button data-filter="all" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">All Time</button>
-                            <button data-filter="today" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Today</button>
-                            <button data-filter="yesterday" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Yesterday</button>
-                            <button data-filter="month" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">This Month</button>
-                            <button data-filter="custom" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Custom Range</button>
+                    <div id="employeeFilterMenu" class="hidden absolute right-0 mt-1 w-40 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
+                        <div class="py-0.5">
+                            <button data-filter="all" class="w-full text-left px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-100">All Time</button>
+                            <button data-filter="today" class="w-full text-left px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-100">Today</button>
+                            <button data-filter="yesterday" class="w-full text-left px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-100">Yesterday</button>
+                            <button data-filter="month" class="w-full text-left px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-100">This Month</button>
+                            <button data-filter="custom" class="w-full text-left px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-100">Custom Range</button>
                         </div>
                     </div>
                 </div>
@@ -25,11 +25,11 @@ export function createEmployeeStatsCard() {
 <table class="min-w-full">
                     <thead class="bg-gray-50">
                         <tr>
-                            <th class="py-2 px-3 text-left text-xs font-semibold text-gray-700">Employee</th>
-                            <th class="py-2 px-2 text-center text-xs font-semibold text-gray-500">IPA %</th>
-                            <th class="py-2 px-2 text-center text-xs font-semibold text-green-700">IPA</th>
-                            <th class="py-2 px-3 text-center text-xs font-semibold text-red-700">IPD</th>
-                            <th class="py-2 px-3 text-center text-xs font-semibold text-blue-700">Total</th>
+                            <th class="py-2 px-3 text-left text-sm font-semibold text-gray-600">Employee</th>
+                            <th class="py-2 px-2 text-center text-sm font-medium text-gray-400">%</th>
+                            <th class="py-2 px-2 text-center text-sm font-semibold text-green-600">IPA</th>
+                            <th class="py-2 px-3 text-center text-sm font-semibold text-red-600">IPD</th>
+                            <th class="py-2 px-3 text-center text-sm font-semibold text-blue-600">Total</th>
                         </tr>
                     </thead>
                     <tbody id="employeeStatsBody">

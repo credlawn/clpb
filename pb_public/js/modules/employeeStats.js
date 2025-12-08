@@ -179,8 +179,8 @@ function renderEmployeeTable(data) {
         grandTotal += total;
 
         return `
-            <tr class="border-b hover:bg-gray-50 transition-colors">
-                <td class="py-2 px-3 text-gray-800 text-sm">${emp.employee_name}</td>
+            <tr class="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                <td class="py-2 px-3 text-gray-700 text-sm">${emp.employee_name}</td>
                 <td class="py-2 px-2 text-center text-gray-400" style="font-size: 10px;">${percentage > 0 ? percentage + '%' : '-'}</td>
                 <td class="py-2 px-2 text-center font-semibold text-green-600 text-sm">${emp.ipa > 0 ? emp.ipa : '-'}</td>
                 <td class="py-2 px-3 text-center font-semibold text-red-600 text-sm">${emp.ipd > 0 ? emp.ipd : '-'}</td>
@@ -192,12 +192,12 @@ function renderEmployeeTable(data) {
     const overallPercentage = grandTotal > 0 ? ((totalIPA / grandTotal) * 100).toFixed(0) : 0;
 
     const totalRow = `
-        <tr class="bg-gray-100 font-bold border-t-2 border-gray-300">
+        <tr class="bg-gray-100 font-bold border-t border-gray-200">
             <td class="py-2 px-3 text-gray-900 text-sm">Total</td>
             <td class="py-2 px-2 text-center text-gray-600" style="font-size: 10px;">${overallPercentage > 0 ? overallPercentage + '%' : '-'}</td>
-            <td class="py-2 px-2 text-center text-green-700 text-sm">${totalIPA > 0 ? totalIPA : '-'}</td>
-            <td class="py-2 px-3 text-center text-red-700 text-sm">${totalIPD > 0 ? totalIPD : '-'}</td>
-            <td class="py-2 px-3 text-center text-blue-700 text-sm">${grandTotal > 0 ? grandTotal : '-'}</td>
+            <td class="py-2 px-2 text-center text-green-700 text-sm font-bold">${totalIPA > 0 ? totalIPA : '-'}</td>
+            <td class="py-2 px-3 text-center text-red-700 text-sm font-bold">${totalIPD > 0 ? totalIPD : '-'}</td>
+            <td class="py-2 px-3 text-center text-blue-700 text-sm font-bold">${grandTotal > 0 ? grandTotal : '-'}</td>
         </tr>
     `;
 
