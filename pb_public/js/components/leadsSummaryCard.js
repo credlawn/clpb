@@ -1,8 +1,9 @@
 export function createLeadsSummaryCard(stats) {
     const total = stats?.total || 0;
     const newLeads = stats?.new || 0;
-    const cnr = stats?.cnr || 0;
-    const denied = stats?.denied || 0;
+    const todayCnr = stats?.today_cnr || 0;
+    const todayDenied = stats?.today_denied || 0;
+    const used = stats?.used || 0;
 
     return `
         <div class="summary-card" onclick="openDetailPanel('leadsPanel')">
@@ -20,11 +21,15 @@ export function createLeadsSummaryCard(stats) {
                     <div class="mini-stat-label">New</div>
                 </div>
                 <div class="mini-stat">
-                    <div class="mini-stat-value text-yellow-600">${cnr}</div>
+                    <div class="mini-stat-value text-green-600">${used}</div>
+                    <div class="mini-stat-label">Used</div>
+                </div>
+                <div class="mini-stat">
+                    <div class="mini-stat-value text-yellow-600">${todayCnr}</div>
                     <div class="mini-stat-label">CNR</div>
                 </div>
                 <div class="mini-stat">
-                    <div class="mini-stat-value text-red-600">${denied}</div>
+                    <div class="mini-stat-value text-red-600">${todayDenied}</div>
                     <div class="mini-stat-label">Denied</div>
                 </div>
             </div>

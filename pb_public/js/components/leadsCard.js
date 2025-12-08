@@ -1,4 +1,38 @@
 export function renderLeadsCard() {
+    const statuses = [
+        { id: 'New', label: 'New', color: 'blue' },
+        { id: 'Called', label: 'Called', color: 'green' },
+        { id: 'CNR', label: 'CNR', color: 'yellow', hasPercent: true },
+        { id: 'Denied', label: 'Denied', color: 'red', hasPercent: true },
+        { id: 'IP Approved', label: 'IP Approved', color: 'green', hasPercent: true, bgClass: 'bg-green-50' },
+        { id: 'IP Decline', label: 'IP Decline', color: 'red', hasPercent: true, bgClass: 'bg-red-50' },
+        { id: 'No Docs', label: 'No Docs', color: 'orange', hasPercent: true },
+        { id: 'Already Carded', label: 'Already Carded', color: 'purple', hasPercent: true },
+        { id: 'Not Eligible', label: 'Not Eligible', color: 'gray', hasPercent: true },
+        { id: 'Follow Up', label: 'Follow Up', color: 'indigo', hasPercent: true }
+    ];
+
+    const statusRows = statuses.map(status => {
+        const elementId = `leads${status.id.replace(/ /g, '')}`;
+        const pctId = `${elementId}Pct`;
+        const colorClass = status.color === 'green' && status.id === 'IP Approved' ? 'green-700' :
+            status.color === 'red' && status.id === 'IP Decline' ? 'red-700' :
+                `${status.color}-600`;
+        const fontWeight = status.id.includes('IP') ? 'font-bold' : 'font-semibold';
+        const textClass = status.id.includes('IP') ? 'font-medium' : '';
+
+        return `
+                <div class="status-row flex items-center justify-between py-2.5 px-3 border-b border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors ${status.bgClass || ''}" data-status="${status.id}">
+                    <span class="text-sm ${textClass} ${status.id.includes('IP') ? `text-${status.color}-700` : 'text-gray-600'}">${status.label}</span>
+                    <div class="flex items-center gap-2">
+                        ${status.hasPercent ? `<span class="text-gray-400" style="font-size: 10px;" id="${pctId}"></span>` : ''}
+                        <span class="text-sm ${fontWeight} text-${colorClass}" id="${elementId}">0</span>
+                        <i data-feather="chevron-right" class="w-4 h-4 text-gray-400 chevron-icon"></i>
+                    </div>
+                </div>
+                <div class="breakdown-container hidden" id="breakdown-${status.id}"></div>`;
+    }).join('');
+
     return `
         <div class="bg-white rounded-lg p-4">
             <div class="flex items-center justify-between mb-3">
@@ -23,81 +57,9 @@ export function renderLeadsCard() {
                 </div>
             </div>
 
-            <div class="space-y-0">
-                <div class="flex items-center justify-between py-2.5 px-3 border-b border-gray-100">
-                    <span class="text-sm text-gray-600">New</span>
-                    <span class="text-sm font-semibold text-blue-600" id="leadsNew">0</span>
-                </div>
-
-                <div class="flex items-center justify-between py-2.5 px-3 border-b border-gray-100">
-                    <span class="text-sm text-gray-600">Called</span>
-                    <span class="text-sm font-semibold text-green-600" id="leadsCalled">0</span>
-                </div>
-
-                <div class="flex items-center justify-between py-2.5 px-3 border-b border-gray-100">
-                    <span class="text-sm text-gray-600">CNR</span>
-                    <div class="flex items-center gap-2">
-                        <span class="text-gray-400" style="font-size: 10px;" id="leadsCNRPct"></span>
-                        <span class="text-sm font-semibold text-yellow-600" id="leadsCNR">0</span>
-                    </div>
-                </div>
-
-                <div class="flex items-center justify-between py-2.5 px-3 border-b border-gray-100">
-                    <span class="text-sm text-gray-600">Denied</span>
-                    <div class="flex items-center gap-2">
-                        <span class="text-gray-400" style="font-size: 10px;" id="leadsDeniedPct"></span>
-                        <span class="text-sm font-semibold text-red-600" id="leadsDenied">0</span>
-                    </div>
-                </div>
-
-                <div class="flex items-center justify-between py-2.5 px-3 border-b border-gray-100 bg-green-50">
-                    <span class="text-sm font-medium text-green-700">IP Approved</span>
-                    <div class="flex items-center gap-2">
-                        <span class="text-green-500" style="font-size: 10px;" id="leadsIPApprovedPct"></span>
-                        <span class="text-sm font-bold text-green-700" id="leadsIPApproved">0</span>
-                    </div>
-                </div>
-
-                <div class="flex items-center justify-between py-2.5 px-3 border-b border-gray-100 bg-red-50">
-                    <span class="text-sm font-medium text-red-700">IP Decline</span>
-                    <div class="flex items-center gap-2">
-                        <span class="text-red-500" style="font-size: 10px;" id="leadsIPDeclinePct"></span>
-                        <span class="text-sm font-bold text-red-700" id="leadsIPDecline">0</span>
-                    </div>
-                </div>
-
-                <div class="flex items-center justify-between py-2.5 px-3 border-b border-gray-100">
-                    <span class="text-sm text-gray-600">No Docs</span>
-                    <div class="flex items-center gap-2">
-                        <span class="text-gray-400" style="font-size: 10px;" id="leadsNoDocsPct"></span>
-                        <span class="text-sm font-semibold text-orange-600" id="leadsNoDocs">0</span>
-                    </div>
-                </div>
-
-                <div class="flex items-center justify-between py-2.5 px-3 border-b border-gray-100">
-                    <span class="text-sm text-gray-600">Already Carded</span>
-                    <div class="flex items-center gap-2">
-                        <span class="text-gray-400" style="font-size: 10px;" id="leadsAlreadyCardedPct"></span>
-                        <span class="text-sm font-semibold text-purple-600" id="leadsAlreadyCarded">0</span>
-                    </div>
-                </div>
-
-                <div class="flex items-center justify-between py-2.5 px-3 border-b border-gray-100">
-                    <span class="text-sm text-gray-600">Not Eligible</span>
-                    <div class="flex items-center gap-2">
-                        <span class="text-gray-400" style="font-size: 10px;" id="leadsNotEligiblePct"></span>
-                        <span class="text-sm font-semibold text-gray-600" id="leadsNotEligible">0</span>
-                    </div>
-                </div>
-
-                <div class="flex items-center justify-between py-2.5 px-3 border-b border-gray-100">
-                    <span class="text-sm text-gray-600">Follow Up</span>
-                    <div class="flex items-center gap-2">
-                        <span class="text-gray-400" style="font-size: 10px;" id="leadsFollowUpPct"></span>
-                        <span class="text-sm font-semibold text-indigo-600" id="leadsFollowUp">0</span>
-                    </div>
-                </div>
-
+            <div class="space-y-0" id="leadsStatusList">
+                ${statusRows}
+                
                 <div class="flex items-center justify-between py-2.5 px-3 bg-gray-100 font-bold border-t border-gray-200">
                     <span class="text-sm text-gray-900">Total</span>
                     <span class="text-sm font-bold text-blue-700" id="leadsTotal">0</span>

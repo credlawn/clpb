@@ -4,6 +4,7 @@ export function createEmployeeSummaryCard(stats) {
     const totalIPD = employees.reduce((sum, e) => sum + (e.ipd || 0), 0);
     const grandTotal = totalIPA + totalIPD;
     const activeCount = employees.length;
+    const ipaPercentage = grandTotal > 0 ? ((totalIPA / grandTotal) * 100).toFixed(0) : 0;
 
     return `
         <div class="summary-card" onclick="openDetailPanel('employeePanel')">
@@ -27,6 +28,10 @@ export function createEmployeeSummaryCard(stats) {
                 <div class="mini-stat">
                     <div class="mini-stat-value text-blue-600">${grandTotal}</div>
                     <div class="mini-stat-label">Total</div>
+                </div>
+                <div class="mini-stat">
+                    <div class="mini-stat-value text-purple-600">${ipaPercentage > 0 ? ipaPercentage + '%' : '0%'}</div>
+                    <div class="mini-stat-label">IPA%</div>
                 </div>
             </div>
         </div>

@@ -1,5 +1,6 @@
 import pb from '../utils/pb.js';
 import { openCustomDateModal } from './customDateModal.js';
+import { setupLeadBreakdown } from './leadBreakdown.js';
 
 let currentDateFilter = 'today';
 let customStartDate = null;
@@ -7,6 +8,7 @@ let customEndDate = null;
 
 export function setupLeadsCard() {
     setupLeadsFilter();
+    setupLeadBreakdown(getDateFilter);
 }
 
 
