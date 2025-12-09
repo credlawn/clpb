@@ -1,7 +1,7 @@
 import { checkAuth, displayUserInfo, setupLogout } from './utils/auth.js';
 import { setupSidebarToggle } from './utils/ui.js';
 import { setupImportModal } from './modules/import.js';
-import { renderSidebar } from './components/sidebar.js';
+import { renderSidebar, setupSyncButton } from './components/sidebar.js';
 import { renderImportModal } from './components/importModal.js';
 import { createCustomDateModal } from './components/customDateModal.js';
 import { setupCustomDateModal } from './modules/customDateModal.js';
@@ -134,6 +134,7 @@ function renderDetailPanelContent() {
 
 if (checkAuth()) {
     document.getElementById('sidebarContainer').innerHTML = renderSidebar();
+    setupSyncButton();
     document.getElementById('importModalContainer').innerHTML = renderImportModal();
 
     async function setupUI() {

@@ -27,6 +27,9 @@ func main() {
 	pb_hooks.SetupLeadsAPI(app)
 	pb_hooks.SetupDashboardAPI(app)
 	pb_hooks.SetupEmployeeStatsAPI(app)
+	pb_hooks.SetupLeadReallocation(app)
+	pb_hooks.SetupLeadShuffle(app)
+	pb_hooks.SetupLeadsSync(app)
 
 	app.OnRecordCreateExecute("database").BindFunc(func(e *core.RecordEvent) error {
 		mobileNo := e.Record.GetString("mobile_no")

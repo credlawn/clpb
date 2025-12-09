@@ -1,6 +1,6 @@
 import { checkAuth, displayUserInfo, setupLogout } from './utils/auth.js';
 import { setupSidebarToggle } from './utils/ui.js';
-import { renderSidebar } from './components/sidebar.js';
+import { renderSidebar, setupSyncButton } from './components/sidebar.js';
 import pb from './utils/pb.js';
 
 let databaseRecords = [];
@@ -47,7 +47,7 @@ async function loadDatabaseRecords() {
     } catch (error) {
         console.error('Error loading database records:', error);
         document.getElementById('databaseTableBody').innerHTML = `
-            <tr><td colspan="8" class="px-4 py-8 text-center text-red-500 text-sm">Error loading records</td></tr>
+            <tr><td colspan="18" class="px-4 py-8 text-center text-red-500 text-sm">Error loading records</td></tr>
         `;
     }
 }
@@ -56,10 +56,18 @@ function populateFilters() {
     const dataCodes = [...new Set(databaseRecords.map(r => r.data_code).filter(Boolean))];
     const dataSubCodes = [...new Set(databaseRecords.map(r => r.data_sub_code).filter(Boolean))];
     const customCodes = [...new Set(databaseRecords.map(r => r.custom_code).filter(Boolean))];
+    const leadStatuses = [...new Set(databaseRecords.map(r => r.lead_status).filter(Boolean))];
 
     const dataCodeFilter = document.getElementById('dataCodeFilter');
     const dataSubCodeFilter = document.getElementById('dataSubCodeFilter');
     const customCodeFilter = document.getElementById('customCodeFilter');
+    const leadStatusFilter = document.getElementById('leadStatusFilter');
+
+    // Also mobile filters
+    const dataCodeFilterMobile = document.getElementById('dataCodeFilterMobile');
+    const dataSubCodeFilterMobile = document.getElementById('dataSubCodeFilterMobile');
+    const customCodeFilterMobile = document.getElementById('customCodeFilterMobile');
+    const leadStatusFilterMobile = document.getElementById('leadStatusFilterMobile');
 
     dataCodes.forEach(code => {
         const option = document.createElement('option');
@@ -73,6 +81,11 @@ function populateFilters() {
         option.value = code;
         option.textContent = code;
         dataSubCodeFilter.appendChild(option);
+    });
+
+    leadStatuses.sort().forEach(code => {
+        leadStatusFilter.add(new Option(code, code));
+        if (leadStatusFilterMobile) leadStatusFilterMobile.add(new Option(code, code));
     });
 
     customCodes.forEach(code => {
@@ -89,6 +102,7 @@ function applyFilters() {
     const dataSubCode = document.getElementById('dataSubCodeFilter').value;
     const customCode = document.getElementById('customCodeFilter').value;
     const dataStatus = document.getElementById('dataStatusFilter').value;
+    const leadStatus = document.getElementById('leadStatusFilter').value;
     const allocationCount = document.getElementById('allocationCountFilter').value;
     const employeeCount = document.getElementById('employeeCountFilter').value;
 
@@ -106,8 +120,10 @@ function applyFilters() {
         if (dataStatus === 'new') {
             matchesDataStatus = !record.data_status || record.data_status === 'new';
         } else if (dataStatus === 'used') {
-            matchesDataStatus = record.data_status === 'used';
+            matchesDataStatus = true; // New includes null/empty
         }
+
+        const matchesLeadStatus = !leadStatus || record.lead_status === leadStatus;
 
         let matchesAllocationCount = true;
         if (allocationCount === '0') matchesAllocationCount = (record.allocation_count || 0) === 0;
@@ -120,7 +136,7 @@ function applyFilters() {
         else if (employeeCount === '2+') matchesEmployeeCount = (record.employee_count || 0) >= 2;
 
         return matchesSearch && matchesDataCode && matchesDataSubCode && matchesCustomCode &&
-            matchesDataStatus && matchesAllocationCount && matchesEmployeeCount;
+            matchesDataStatus && matchesLeadStatus && matchesAllocationCount && matchesEmployeeCount;
     });
 
     currentPage = 1;
@@ -133,6 +149,7 @@ function resetFilters() {
     document.getElementById('dataSubCodeFilter').value = '';
     document.getElementById('customCodeFilter').value = '';
     document.getElementById('dataStatusFilter').value = '';
+    document.getElementById('leadStatusFilter').value = '';
     document.getElementById('allocationCountFilter').value = '';
     document.getElementById('employeeCountFilter').value = '';
     applyFilters();
@@ -145,7 +162,7 @@ function renderTable() {
     const pageRecords = filteredRecords.slice(start, end);
 
     if (pageRecords.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="13" class="px-4 py-8 text-center text-gray-400 text-xs">No records found</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="18" class="px-4 py-8 text-center text-gray-400 text-xs">No records found</td></tr>`;
         document.getElementById('showingCount').textContent = '0 records';
         document.getElementById('totalRecordCount').textContent = '0';
         return;
@@ -185,6 +202,21 @@ function renderTable() {
             <td class="px-2 py-1.5 text-gray-600 whitespace-nowrap">${record.product || '-'}</td>
             <td class="px-2 py-1.5 text-gray-600 whitespace-nowrap">${record.segment || '-'}</td>
             <td class="px-2 py-1.5 text-gray-600 whitespace-nowrap">${record.decline_reason || '-'}</td>
+            <td class="px-2 py-1.5 text-gray-600 whitespace-nowrap">
+                <span class="inline-block px-1.5 py-0.5 rounded text-xs font-medium ${record.lead_status === 'Interested' ? 'bg-green-100 text-green-700' :
+                record.lead_status === 'CPR' ? 'bg-blue-100 text-blue-700' :
+                    record.lead_status === 'Follow Up' ? 'bg-yellow-100 text-yellow-700' :
+                        'bg-gray-100 text-gray-600'
+            }">${record.lead_status || '-'}</span>
+            </td>
+            <td class="px-2 py-1.5 text-gray-600 whitespace-nowrap text-xs">
+                ${record.lead_status_date ? new Date(record.lead_status_date).toLocaleDateString() : '-'}
+            </td>
+            <td class="px-2 py-1.5 text-gray-600 text-center">${record.total_calls || 0}</td>
+            <td class="px-2 py-1.5 text-gray-600 text-center">${record.connected_calls || 0}</td>
+            <td class="px-2 py-1.5 text-gray-600 text-center text-xs">
+                ${record.connected_duration ? Math.floor(record.connected_duration / 60) + 'm ' + (record.connected_duration % 60) + 's' : '-'}
+            </td>
             <td class="px-2 py-1.5 text-gray-600 whitespace-nowrap">${record.data_code || '-'}</td>
             <td class="px-2 py-1.5 text-gray-600 whitespace-nowrap">${record.data_sub_code || '-'}</td>
             <td class="px-2 py-1.5 text-gray-600 whitespace-nowrap">${record.custom_code || '-'}</td>
@@ -287,7 +319,8 @@ async function openAllocationModal() {
                 <input type="checkbox" 
                     class="employee-checkbox w-3.5 h-3.5 rounded" 
                     data-code="${emp.employee_code}"
-                    data-name="${emp.employee_name}">
+                    data-name="${emp.employee_name}"
+                    data-current-leads="${emp.new_leads_count}">
                 <div class="flex-1 min-w-0 text-xs font-medium text-gray-800 truncate">${emp.employee_name}</div>
                 <div class="text-xs text-green-600 font-medium w-8 text-center">${emp.new_leads_count}</div>
                 <input type="number" 
@@ -324,6 +357,41 @@ function setupModalListeners() {
     document.querySelectorAll('.allocation-count').forEach(input => {
         input.addEventListener('input', validateAllocation);
     });
+}
+
+const MAX_PER_EMPLOYEE = 15;
+
+function autoDistribute() {
+    const totalLeads = selectedRecords.size;
+    const allEmployees = document.querySelectorAll('.employee-checkbox');
+
+    if (allEmployees.length === 0 || totalLeads === 0) {
+        return;
+    }
+
+    let remaining = totalLeads;
+
+    allEmployees.forEach(checkbox => {
+        const code = checkbox.dataset.code;
+        const currentLeads = parseInt(checkbox.dataset.currentLeads) || 0;
+        const input = document.querySelector(`.allocation-count[data-code="${code}"]`);
+
+        const maxCanAllocate = Math.max(0, MAX_PER_EMPLOYEE - currentLeads);
+
+        if (remaining > 0 && maxCanAllocate > 0) {
+            checkbox.checked = true;
+            input.disabled = false;
+            const toAssign = Math.min(maxCanAllocate, remaining);
+            input.value = toAssign;
+            remaining -= toAssign;
+        } else {
+            checkbox.checked = false;
+            input.disabled = true;
+            input.value = 0;
+        }
+    });
+
+    validateAllocation();
 }
 
 function validateAllocation() {
@@ -372,10 +440,15 @@ async function confirmAllocation() {
 
     const confirmBtn = document.getElementById('confirmAllocation');
     confirmBtn.disabled = true;
-    confirmBtn.textContent = 'Allocating...';
+
+    const dataStatus = document.getElementById('dataStatusFilter').value;
+    const isReallocation = dataStatus === 'used';
+    const apiEndpoint = isReallocation ? '/api/reallocate-leads' : '/api/allocate-leads';
+
+    confirmBtn.textContent = isReallocation ? 'Reallocating...' : 'Allocating...';
 
     try {
-        const response = await fetch('/api/allocate-leads', {
+        const response = await fetch(apiEndpoint, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -392,7 +465,9 @@ async function confirmAllocation() {
         const result = await response.json();
 
         if (response.ok) {
-            showToast(`Allocated ${result.allocated_count} leads successfully!`, 'success');
+            const count = isReallocation ? result.reallocated_count : result.allocated_count;
+            const action = isReallocation ? 'Reallocated' : 'Allocated';
+            showToast(`${action} ${count} leads successfully!`, 'success');
             closeModal();
             selectedRecords.clear();
             await loadDatabaseRecords();
@@ -405,7 +480,7 @@ async function confirmAllocation() {
         showToast('Network error. Please try again.', 'error');
     } finally {
         confirmBtn.disabled = false;
-        confirmBtn.textContent = 'Confirm Allocation';
+        confirmBtn.textContent = 'Confirm';
     }
 }
 
@@ -413,8 +488,220 @@ function closeModal() {
     document.getElementById('allocationModal').classList.add('hidden');
 }
 
+let shuffleEligibleLeads = [];
+
+function openShuffleModal() {
+    document.getElementById('shuffleModal').classList.remove('hidden');
+    document.getElementById('shuffleEligibleCount').textContent = '...';
+    document.getElementById('shuffleTotalAllocation').textContent = '0';
+    document.getElementById('shuffleEmployeeList').innerHTML = '<div class="text-center py-4 text-gray-400 text-xs">Loading...</div>';
+    document.getElementById('confirmShuffle').disabled = true;
+    feather.replace();
+
+    previewShuffle();
+}
+
+function closeShuffleModal() {
+    document.getElementById('shuffleModal').classList.add('hidden');
+    shuffleEligibleLeads = [];
+}
+
+async function previewShuffle() {
+    const statuses = [];
+    if (document.getElementById('shuffleCNR').checked) statuses.push('CNR');
+    if (document.getElementById('shuffleDenied').checked) statuses.push('Denied');
+
+    if (statuses.length === 0) {
+        showToast('Select at least one status', 'error');
+        return;
+    }
+
+    const minAge = parseInt(document.getElementById('shuffleMinAge').value) || 1;
+
+    document.getElementById('shuffleEmployeeList').innerHTML = '<div class="text-center py-4 text-gray-400 text-xs">Loading...</div>';
+
+    try {
+        const previewRes = await fetch('/api/shuffle-preview', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': pb.authStore.token },
+            body: JSON.stringify({ lead_statuses: statuses, min_age_days: minAge })
+        });
+
+        const previewData = await previewRes.json();
+        console.log('Shuffle preview response:', previewData);
+
+        if (!previewRes.ok) {
+            showToast(previewData.error || 'Error loading eligible leads', 'error');
+            document.getElementById('shuffleEmployeeList').innerHTML = '<div class="text-center py-4 text-red-500 text-xs">Error: ' + (previewData.error || 'Unknown error') + '</div>';
+            return;
+        }
+
+        shuffleEligibleLeads = previewData.leads || [];
+
+        document.getElementById('shuffleEligibleCount').textContent = previewData.eligible_count || 0;
+
+        const empRes = await fetch('/api/employees/with-new-leads', {
+            headers: { 'Authorization': pb.authStore.token }
+        });
+        const employees = await empRes.json();
+
+        employees.sort((a, b) => a.new_leads_count - b.new_leads_count);
+
+        document.getElementById('shuffleEmployeeList').innerHTML = employees.map(emp => `
+            <div class="flex items-center gap-3 p-2 rounded hover:bg-gray-50 border border-gray-100">
+                <input type="checkbox" class="shuffle-employee-checkbox w-3.5 h-3.5 rounded" 
+                    data-code="${emp.employee_code}" data-name="${emp.employee_name}" data-current-leads="${emp.new_leads_count}">
+                <div class="flex-1 min-w-0 text-xs font-medium text-gray-800 truncate">${emp.employee_name}</div>
+                <div class="text-xs text-green-600 font-medium w-8 text-center">${emp.new_leads_count}</div>
+                <input type="number" class="shuffle-allocation-count w-12 px-1 py-0.5 border border-gray-300 rounded text-xs text-center" 
+                    data-code="${emp.employee_code}" min="0" value="0" disabled>
+            </div>
+        `).join('');
+
+        setupShuffleListeners();
+        feather.replace();
+    } catch (error) {
+        console.error('Error previewing shuffle:', error);
+        document.getElementById('shuffleEmployeeList').innerHTML = '<div class="text-center py-4 text-red-500 text-xs">Error loading data</div>';
+    }
+}
+
+function setupShuffleListeners() {
+    document.querySelectorAll('.shuffle-employee-checkbox').forEach(checkbox => {
+        checkbox.addEventListener('change', (e) => {
+            const code = e.target.dataset.code;
+            const input = document.querySelector(`.shuffle-allocation-count[data-code="${code}"]`);
+            input.disabled = !e.target.checked;
+            if (!e.target.checked) input.value = 0;
+            validateShuffle();
+        });
+    });
+
+    document.querySelectorAll('.shuffle-allocation-count').forEach(input => {
+        input.addEventListener('input', validateShuffle);
+    });
+}
+
+function autoMax15Shuffle() {
+    const checkboxes = document.querySelectorAll('.shuffle-employee-checkbox');
+    const inputs = document.querySelectorAll('.shuffle-allocation-count');
+    const eligible = shuffleEligibleLeads.length;
+
+    if (eligible === 0) {
+        showToast('No eligible leads to shuffle', 'error');
+        return;
+    }
+
+    if (checkboxes.length === 0) {
+        showToast('No employees available', 'error');
+        return;
+    }
+
+    let remaining = eligible;
+    const maxPerEmployee = 15;
+
+    checkboxes.forEach((checkbox, index) => {
+        const input = inputs[index];
+        const currentLeads = parseInt(checkbox.dataset.currentLeads) || 0;
+        const maxCanAllocate = Math.max(0, maxPerEmployee - currentLeads);
+
+        if (remaining > 0 && maxCanAllocate > 0) {
+            checkbox.checked = true;
+            input.disabled = false;
+            const toAssign = Math.min(maxCanAllocate, remaining);
+            input.value = toAssign;
+            remaining -= toAssign;
+        } else {
+            checkbox.checked = false;
+            input.disabled = true;
+            input.value = 0;
+        }
+    });
+
+    validateShuffle();
+    showToast(`Auto-distributed ${eligible - remaining} leads to employees`, 'success');
+}
+
+function validateShuffle() {
+    const total = Array.from(document.querySelectorAll('.shuffle-allocation-count'))
+        .reduce((sum, input) => sum + (parseInt(input.value) || 0), 0);
+
+    const eligible = shuffleEligibleLeads.length;
+    document.getElementById('shuffleTotalAllocation').textContent = `${total} / ${eligible}`;
+
+    const confirmBtn = document.getElementById('confirmShuffle');
+    const errorDiv = document.getElementById('shuffleError');
+
+    if (total > eligible) {
+        errorDiv.textContent = `Total (${total}) exceeds eligible (${eligible})`;
+        errorDiv.classList.remove('hidden');
+        confirmBtn.disabled = true;
+    } else if (total === 0) {
+        errorDiv.classList.add('hidden');
+        confirmBtn.disabled = true;
+    } else {
+        errorDiv.classList.add('hidden');
+        confirmBtn.disabled = false;
+    }
+}
+
+async function confirmShuffle() {
+    const statuses = [];
+    if (document.getElementById('shuffleCNR').checked) statuses.push('CNR');
+    if (document.getElementById('shuffleDenied').checked) statuses.push('Denied');
+
+    const minAge = parseInt(document.getElementById('shuffleMinAge').value) || 1;
+
+    const allocations = [];
+    document.querySelectorAll('.shuffle-employee-checkbox:checked').forEach(checkbox => {
+        const code = checkbox.dataset.code;
+        const name = checkbox.dataset.name;
+        const count = parseInt(document.querySelector(`.shuffle-allocation-count[data-code="${code}"]`).value) || 0;
+        if (count > 0) {
+            allocations.push({ employee_code: code, employee_name: name, count });
+        }
+    });
+
+    if (allocations.length === 0) return;
+
+    const confirmBtn = document.getElementById('confirmShuffle');
+    confirmBtn.disabled = true;
+    confirmBtn.textContent = 'Shuffling...';
+
+    try {
+        const response = await fetch('/api/shuffle-leads', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': pb.authStore.token },
+            body: JSON.stringify({
+                lead_statuses: statuses,
+                min_age_days: minAge,
+                allocations,
+                allocated_by_code: pb.authStore.record.employee_code,
+                allocated_by_name: pb.authStore.record.employee_name
+            })
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+            showToast(`Shuffled ${result.shuffled_count} leads successfully!`, 'success');
+            closeShuffleModal();
+            await loadDatabaseRecords();
+        } else {
+            showToast(result.error || 'Failed to shuffle leads', 'error');
+        }
+    } catch (error) {
+        console.error('Error shuffling:', error);
+        showToast('Network error', 'error');
+    } finally {
+        confirmBtn.disabled = false;
+        confirmBtn.textContent = 'Shuffle';
+    }
+}
+
 if (checkAuth()) {
     document.getElementById('sidebarContainer').innerHTML = renderSidebar();
+    setupSyncButton();
     displayUserInfo();
     setupSidebarToggle();
     setupLogout();
@@ -424,6 +711,7 @@ if (checkAuth()) {
     document.getElementById('dataSubCodeFilter').addEventListener('change', applyFilters);
     document.getElementById('customCodeFilter').addEventListener('change', applyFilters);
     document.getElementById('dataStatusFilter').addEventListener('change', applyFilters);
+    document.getElementById('leadStatusFilter').addEventListener('change', applyFilters);
     document.getElementById('allocationCountFilter').addEventListener('change', applyFilters);
     document.getElementById('employeeCountFilter').addEventListener('change', applyFilters);
 
@@ -440,7 +728,7 @@ if (checkAuth()) {
     }
 
     const mobileFilters = ['searchInputMobile', 'dataCodeFilterMobile', 'dataSubCodeFilterMobile',
-        'customCodeFilterMobile', 'dataStatusFilterMobile', 'allocationCountFilterMobile', 'employeeCountFilterMobile'];
+        'customCodeFilterMobile', 'dataStatusFilterMobile', 'leadStatusFilterMobile', 'allocationCountFilterMobile', 'employeeCountFilterMobile'];
 
     mobileFilters.forEach(id => {
         const el = document.getElementById(id);
@@ -501,6 +789,16 @@ if (checkAuth()) {
     document.getElementById('closeModal').addEventListener('click', closeModal);
     document.getElementById('cancelAllocation').addEventListener('click', closeModal);
     document.getElementById('confirmAllocation').addEventListener('click', confirmAllocation);
+    document.getElementById('autoDistributeBtn').addEventListener('click', autoDistribute);
+
+    document.getElementById('shuffleBtn').addEventListener('click', openShuffleModal);
+    document.getElementById('closeShuffleModal').addEventListener('click', closeShuffleModal);
+    document.getElementById('cancelShuffle').addEventListener('click', closeShuffleModal);
+    document.getElementById('autoMax15Btn').addEventListener('click', autoMax15Shuffle);
+    document.getElementById('confirmShuffle').addEventListener('click', confirmShuffle);
+    document.getElementById('shuffleCNR').addEventListener('change', previewShuffle);
+    document.getElementById('shuffleDenied').addEventListener('change', previewShuffle);
+    document.getElementById('shuffleMinAge').addEventListener('change', previewShuffle);
 
     loadDatabaseRecords();
     feather.replace();

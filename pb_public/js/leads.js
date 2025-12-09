@@ -1,5 +1,5 @@
 import { checkAuth } from './utils/auth.js';
-import { renderSidebar } from './components/sidebar.js';
+import { renderSidebar, setupSyncButton } from './components/sidebar.js';
 import { renderLeadsTable } from './components/leadsTable.js';
 import { renderLeadsFilters } from './components/leadsFilters.js';
 import { fetchLeads, fetchAgents } from './modules/leadsData.js';
@@ -22,6 +22,7 @@ async function init() {
     if (!await checkAuth()) return;
 
     document.getElementById('sidebarContainer').innerHTML = renderSidebar();
+    setupSyncButton();
     document.getElementById('filtersContainer').innerHTML = renderLeadsFilters();
 
     setupEventListeners();

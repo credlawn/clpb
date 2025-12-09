@@ -111,6 +111,10 @@ func SetupLeadAllocation(app *pocketbase.PocketBase) {
 
 					if existingLead != nil {
 						e.App.Logger().Info("Skipping - mobile already exists in leads", "mobile", mobileNo)
+						currentCount := dbRecord.GetInt("allocation_count")
+						dbRecord.Set("data_status", "used")
+						dbRecord.Set("allocation_count", currentCount+1)
+						e.App.Save(dbRecord)
 						skippedCount++
 						continue
 					} else {

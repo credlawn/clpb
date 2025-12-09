@@ -10,12 +10,9 @@ import (
 func SetupCallCount(app core.App) {
 	app.OnRecordAfterCreateSuccess("call_logs").Bind(&hook.Handler[*core.RecordEvent]{
 		Func: func(e *core.RecordEvent) error {
-			// Immediately return and process in background
 			go func(event *core.RecordEvent) {
-				// Recover from any panic
 				defer func() {
 					if r := recover(); r != nil {
-						// Silent fail
 						_ = r
 					}
 				}()
@@ -23,7 +20,6 @@ func SetupCallCount(app core.App) {
 				processCallCount(event)
 			}(e)
 
-			// Always continue realtime flow
 			return e.Next()
 		},
 	})
@@ -84,4 +80,26 @@ func processCallCount(e *core.RecordEvent) {
 	}
 	
 	_ = e.App.Save(lead)
+
+	if phoneNumber != "" {
+		dbRecord, err := e.App.FindFirstRecordByData("database", "mobile_no", phoneNumber)
+		if err == nil && dbRecord != nil {
+			dbTotalCalls := dbRecord.GetInt("total_calls")
+			dbConnectedCalls := dbRecord.GetInt("connected_calls")
+			dbConnectedDuration := dbRecord.GetInt("connected_duration")
+			
+			dbTotalCalls++
+			
+			if callDuration > 10 {
+				dbConnectedCalls++
+				dbConnectedDuration += callDuration
+			}
+			
+			dbRecord.Set("total_calls", dbTotalCalls)
+			dbRecord.Set("connected_calls", dbConnectedCalls)
+			dbRecord.Set("connected_duration", dbConnectedDuration)
+			
+			_ = e.App.Save(dbRecord)
+		}
+	}
 }
