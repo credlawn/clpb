@@ -95,7 +95,9 @@ function applyFilters() {
     filteredRecords = databaseRecords.filter(record => {
         const matchesSearch = !searchTerm ||
             record.customer_name?.toLowerCase().includes(searchTerm) ||
-            record.mobile_no?.includes(searchTerm);
+            record.mobile_no?.includes(searchTerm) ||
+            record.city?.toLowerCase().includes(searchTerm) ||
+            record.employer?.toLowerCase().includes(searchTerm);
         const matchesDataCode = !dataCode || record.data_code === dataCode;
         const matchesDataSubCode = !dataSubCode || record.data_sub_code === dataSubCode;
         const matchesCustomCode = !customCode || record.custom_code === customCode;
@@ -143,47 +145,53 @@ function renderTable() {
     const pageRecords = filteredRecords.slice(start, end);
 
     if (pageRecords.length === 0) {
-        tbody.innerHTML = `
-            <tr><td colspan="8" class="px-4 py-8 text-center text-gray-500 text-sm">No records found</td></tr>
-        `;
+        tbody.innerHTML = `<tr><td colspan="13" class="px-4 py-8 text-center text-gray-400 text-xs">No records found</td></tr>`;
+        document.getElementById('showingCount').textContent = '0 records';
+        document.getElementById('totalRecordCount').textContent = '0';
         return;
     }
 
-    tbody.innerHTML = pageRecords.map(record => `
-        <tr class="hover:bg-gray-50 ${selectedRecords.has(record.id) ? 'bg-blue-50' : ''}">
-            <td class="px-4 py-3 sticky left-0 bg-white ${selectedRecords.has(record.id) ? 'bg-blue-50' : ''}">
+    const toTitleCase = (str) => {
+        if (!str) return '-';
+        return str.toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
+    };
+
+    tbody.innerHTML = pageRecords.map(record => {
+        const isSelected = selectedRecords.has(record.id);
+        const allocCount = record.allocation_count || 0;
+        const empCount = record.employee_count || 0;
+
+        return `
+        <tr class="${isSelected ? 'selected' : ''}">
+            <td class="px-2 py-1.5 sticky left-0 bg-inherit">
                 <input type="checkbox" 
-                    class="record-checkbox w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500" 
+                    class="record-checkbox w-3.5 h-3.5 rounded" 
                     data-id="${record.id}"
-                    ${selectedRecords.has(record.id) ? 'checked' : ''}
-                    ${selectedRecords.size >= 100 && !selectedRecords.has(record.id) ? 'disabled' : ''}>
+                    ${isSelected ? 'checked' : ''}
+                    ${selectedRecords.size >= 100 && !isSelected ? 'disabled' : ''}>
             </td>
-            <td class="px-4 py-3 text-sm text-gray-800 whitespace-nowrap">${record.customer_name || '-'}</td>
-            <td class="px-4 py-3 text-sm text-gray-600 whitespace-nowrap">${record.mobile_no || '-'}</td>
-            <td class="px-4 py-3 text-sm text-gray-600 whitespace-nowrap">${record.city || '-'}</td>
-            <td class="px-4 py-3 text-sm text-gray-600 whitespace-nowrap">${record.employer || '-'}</td>
-            <td class="px-4 py-3 text-sm text-gray-600 whitespace-nowrap">${record.segment || '-'}</td>
-            <td class="px-4 py-3 text-sm text-gray-600 whitespace-nowrap">${record.product || '-'}</td>
-            <td class="px-4 py-3 text-sm text-gray-600 whitespace-nowrap">${record.decline_reason || '-'}</td>
-            <td class="px-4 py-3 text-center text-sm">
-                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${record.data_status === 'used' ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}">
+            <td class="px-2 py-1.5 font-medium text-gray-800 whitespace-nowrap">${toTitleCase(record.customer_name)}</td>
+            <td class="px-2 py-1.5 text-gray-600 whitespace-nowrap">${record.mobile_no || '-'}</td>
+            <td class="px-2 py-1.5 text-center">
+                <span class="inline-block px-1.5 py-0.5 rounded text-xs font-medium ${record.data_status === 'used' ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}">
                     ${record.data_status || 'new'}
                 </span>
             </td>
-            <td class="px-4 py-3 text-center text-sm whitespace-nowrap">
-                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${record.allocation_count > 0 ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-600'}">
-                    ${record.allocation_count || 0}
-                </span>
+            <td class="px-2 py-1.5 text-center">
+                <span class="text-gray-600">${allocCount}</span><span class="text-gray-300">/</span><span class="text-gray-600">${empCount}</span>
             </td>
-            <td class="px-4 py-3 text-center text-sm whitespace-nowrap">
-                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${record.employee_count > 0 ? 'bg-purple-100 text-purple-800' : 'bg-gray-100 text-gray-600'}">
-                    ${record.employee_count || 0}
-                </span>
-            </td>
-        </tr>
-    `).join('');
+            <td class="px-2 py-1.5 text-gray-600 whitespace-nowrap">${record.city || '-'}</td>
+            <td class="px-2 py-1.5 text-gray-600 whitespace-nowrap">${toTitleCase(record.employer)}</td>
+            <td class="px-2 py-1.5 text-gray-600 whitespace-nowrap">${record.product || '-'}</td>
+            <td class="px-2 py-1.5 text-gray-600 whitespace-nowrap">${record.segment || '-'}</td>
+            <td class="px-2 py-1.5 text-gray-600 whitespace-nowrap">${record.decline_reason || '-'}</td>
+            <td class="px-2 py-1.5 text-gray-600 whitespace-nowrap">${record.data_code || '-'}</td>
+            <td class="px-2 py-1.5 text-gray-600 whitespace-nowrap">${record.data_sub_code || '-'}</td>
+            <td class="px-2 py-1.5 text-gray-600 whitespace-nowrap">${record.custom_code || '-'}</td>
+        </tr>`;
+    }).join('');
 
-    document.getElementById('showingCount').textContent = filteredRecords.length;
+    document.getElementById('showingCount').textContent = `${filteredRecords.length} records`;
     document.getElementById('totalRecordCount').textContent = filteredRecords.length;
 
     const prevBtn = document.getElementById('prevPage');
@@ -275,43 +283,20 @@ async function openAllocationModal() {
         employees.sort((a, b) => a.new_leads_count - b.new_leads_count);
 
         employeeList.innerHTML = employees.map(emp => `
-            <div class="border border-gray-200 rounded-lg p-4 hover:border-blue-300 transition-colors">
-                <div class="grid grid-cols-3 gap-4">
-                    <div class="col-span-1 flex items-start gap-2">
-                        <input type="checkbox" 
-                            class="employee-checkbox mt-1 w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500" 
-                            data-code="${emp.employee_code}"
-                            data-name="${emp.employee_name}">
-                        <div>
-                            <div class="font-medium text-gray-800 text-sm">${emp.employee_name}</div>
-                            <div class="text-xs text-gray-500">${emp.employee_code}</div>
-                        </div>
-                    </div>
-                    
-                    <div class="col-span-1 flex flex-col items-center justify-center">
-                        <div class="flex items-center gap-1">
-                            <input type="number" 
-                                class="allocation-count w-16 px-2 py-1 border border-gray-300 rounded text-sm text-center focus:outline-none focus:ring-2 focus:ring-blue-500" 
-                                data-code="${emp.employee_code}"
-                                min="0" 
-                                max="${selectedRecords.size}" 
-                                value="0"
-                                disabled>
-                            <span class="text-xs text-gray-500">leads</span>
-                        </div>
-                    </div>
-                    
-                    <div class="col-span-1 flex items-center justify-end gap-4 text-sm text-gray-600">
-                        <div class="text-center">
-                            <div class="text-xs text-gray-500">New</div>
-                            <div class="font-semibold text-green-600">${emp.new_leads_count}</div>
-                        </div>
-                        <div class="text-center">
-                            <div class="text-xs text-gray-500">Total</div>
-                            <div class="font-semibold text-blue-600">${emp.total_leads}</div>
-                        </div>
-                    </div>
-                </div>
+            <div class="flex items-center gap-3 p-2 rounded hover:bg-gray-50 border border-gray-100">
+                <input type="checkbox" 
+                    class="employee-checkbox w-3.5 h-3.5 rounded" 
+                    data-code="${emp.employee_code}"
+                    data-name="${emp.employee_name}">
+                <div class="flex-1 min-w-0 text-xs font-medium text-gray-800 truncate">${emp.employee_name}</div>
+                <div class="text-xs text-green-600 font-medium w-8 text-center">${emp.new_leads_count}</div>
+                <input type="number" 
+                    class="allocation-count w-12 px-1 py-0.5 border border-gray-300 rounded text-xs text-center focus:border-blue-500 outline-none" 
+                    data-code="${emp.employee_code}"
+                    min="0" 
+                    max="${selectedRecords.size}" 
+                    value="0"
+                    disabled>
             </div>
         `).join('');
 
@@ -319,7 +304,7 @@ async function openAllocationModal() {
         setupModalListeners();
     } catch (error) {
         console.error('Error loading employees:', error);
-        employeeList.innerHTML = `<div class="text-center py-8 text-red-500">Error loading employees</div>`;
+        employeeList.innerHTML = `<div class="text-center py-6 text-red-500 text-xs">Error loading employees</div>`;
     }
 }
 
@@ -443,6 +428,42 @@ if (checkAuth()) {
     document.getElementById('employeeCountFilter').addEventListener('change', applyFilters);
 
     document.getElementById('resetFilters').addEventListener('click', resetFilters);
+
+    const mobileFilterBtn = document.getElementById('mobileFilterBtn');
+    const mobileFilterPanel = document.getElementById('mobileFilterPanel');
+
+    if (mobileFilterBtn && mobileFilterPanel) {
+        mobileFilterBtn.addEventListener('click', () => {
+            mobileFilterPanel.classList.toggle('hidden');
+            feather.replace();
+        });
+    }
+
+    const mobileFilters = ['searchInputMobile', 'dataCodeFilterMobile', 'dataSubCodeFilterMobile',
+        'customCodeFilterMobile', 'dataStatusFilterMobile', 'allocationCountFilterMobile', 'employeeCountFilterMobile'];
+
+    mobileFilters.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.addEventListener('input', () => {
+                const desktopId = id.replace('Mobile', '');
+                const desktopEl = document.getElementById(desktopId);
+                if (desktopEl) desktopEl.value = el.value;
+                applyFilters();
+            });
+            el.addEventListener('change', () => {
+                const desktopId = id.replace('Mobile', '');
+                const desktopEl = document.getElementById(desktopId);
+                if (desktopEl) desktopEl.value = el.value;
+                applyFilters();
+            });
+        }
+    });
+
+    const resetMobile = document.getElementById('resetFiltersMobile');
+    if (resetMobile) {
+        resetMobile.addEventListener('click', resetFilters);
+    }
 
     document.getElementById('selectAll').addEventListener('change', (e) => {
         const checkboxes = document.querySelectorAll('.record-checkbox:not([disabled])');
