@@ -110,41 +110,9 @@ func SetupLeadAllocation(app *pocketbase.PocketBase) {
 					}
 
 					if existingLead != nil {
-						if existingLead.GetString("employee_code") == alloc.EmployeeCode {
-							e.App.Logger().Info("Skipping - already allocated to same employee", "mobile", mobileNo)
-							skippedCount++
-							continue
-						}
-
-						existingLead.Set("employee_code", alloc.EmployeeCode)
-						existingLead.Set("employee_name", alloc.EmployeeName)
-						existingLead.Set("assigned_date", time.Now().UTC().Format(time.RFC3339))
-						existingLead.Set("assigned_to", user.Id)
-						existingLead.Set("lead_status", "New")
-						existingLead.Set("lead_status_date", time.Now().UTC().Format(time.RFC3339))
-
-						if err := e.App.Save(existingLead); err != nil {
-							e.App.Logger().Error("Failed to update existing lead", "error", err, "mobile", mobileNo)
-							skippedCount++
-							continue
-						}
-
-						leadRecordID = existingLead.Id
-						allocationType = "reallocation"
-
-						var oldAllocation struct {
-							Sequence int `db:"allocation_sequence"`
-						}
-						e.App.DB().NewQuery("SELECT allocation_sequence FROM lead_allocation_history WHERE lead_record_id = {:id} AND is_active = TRUE").
-							Bind(dbx.Params{"id": leadRecordID}).One(&oldAllocation)
-
-						allocationSequence = oldAllocation.Sequence + 1
-
-						e.App.DB().NewQuery("UPDATE lead_allocation_history SET is_active = FALSE, deallocated_date = {:date} WHERE lead_record_id = {:id} AND is_active = TRUE").
-							Bind(dbx.Params{
-								"id":   leadRecordID,
-								"date": time.Now().Format(time.RFC3339),
-							}).Execute()
+						e.App.Logger().Info("Skipping - mobile already exists in leads", "mobile", mobileNo)
+						skippedCount++
+						continue
 					} else {
 						leadsCollection, err := e.App.FindCollectionByNameOrId("leads")
 						if err != nil {

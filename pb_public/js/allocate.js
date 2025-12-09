@@ -38,12 +38,11 @@ async function loadDatabaseRecords() {
         });
 
         databaseRecords = records;
-        filteredRecords = records;
 
         selectedRecords.clear();
 
         populateFilters();
-        renderTable();
+        applyFilters();
         updateSelectionUI();
     } catch (error) {
         console.error('Error loading database records:', error);
@@ -185,6 +184,7 @@ function renderTable() {
     `).join('');
 
     document.getElementById('showingCount').textContent = filteredRecords.length;
+    document.getElementById('totalRecordCount').textContent = filteredRecords.length;
 
     const prevBtn = document.getElementById('prevPage');
     const nextBtn = document.getElementById('nextPage');
@@ -253,16 +253,17 @@ function updateSelectionUI() {
     const visibleCheckboxes = document.querySelectorAll('.record-checkbox:not([disabled])');
     const allChecked = Array.from(visibleCheckboxes).every(cb => cb.checked);
     selectAll.checked = allChecked && visibleCheckboxes.length > 0;
-
-    renderTable();
 }
 
 async function openAllocationModal() {
     const modal = document.getElementById('allocationModal');
     const employeeList = document.getElementById('employeeList');
 
-    document.getElementById('modalSelectedCount').textContent = selectedRecords.size;
-    document.getElementById('totalSelected').textContent = selectedRecords.size;
+    const modalSelectedCount = document.getElementById('modalSelectedCount');
+    const totalSelected = document.getElementById('totalSelected');
+
+    if (modalSelectedCount) modalSelectedCount.textContent = selectedRecords.size;
+    if (totalSelected) totalSelected.textContent = selectedRecords.size;
 
     modal.classList.remove('hidden');
 

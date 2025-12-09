@@ -41,7 +41,8 @@
                         <button id="sidebarToggle" class="lg:hidden">
                             <i data-feather="menu" class="w-6 h-6 text-gray-600"></i>
                         </button>
-                        <h1 class="text-xl font-bold text-gray-800">Lead Allocation</h1>
+                        <h1 class="text-xl font-bold text-gray-800">Lead Allocation <span id="totalRecordCount"
+                                class="text-blue-600">0</span></h1>
                     </div>
                     <div class="flex items-center gap-4">
                         <span class="text-sm text-gray-600">Selected: <span id="selectedCount"
@@ -81,8 +82,7 @@
 
                                     <select id="dataStatusFilter"
                                         class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                                        <option value="">All Status</option>
-                                        <option value="new">New</option>
+                                        <option value="new" selected>New</option>
                                         <option value="used">Used</option>
                                     </select>
 
