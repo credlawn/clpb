@@ -23,14 +23,19 @@ export function renderSidebar() {
                 </a>
 
                 <a href="/leads.html" class="flex items-center space-x-2 px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg text-sm font-medium">
-                    <i data-feather="list" class="w-4 h-4 flex-shrink-0"></i>
-                    <span class="sidebar-text">Leads</span>
-                </a>
+                <i data-feather="list" class="w-4 h-4 flex-shrink-0"></i>
+                <span class="sidebar-text">Leads</span>
+            </a>
 
-                <a href="#" class="flex items-center space-x-2 px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg text-sm font-medium">
-                    <i data-feather="upload" class="w-4 h-4 flex-shrink-0"></i>
-                    <span class="sidebar-text">Import Data</span>
-                </a>
+            <a href="/allocate.html" class="flex items-center space-x-2 px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg text-sm font-medium">
+                <i data-feather="target" class="w-4 h-4 flex-shrink-0"></i>
+                <span class="sidebar-text">Allocate Leads</span>
+            </a>
+
+            <a href="#" class="flex items-center space-x-2 px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg text-sm font-medium">
+                <i data-feather="upload" class="w-4 h-4 flex-shrink-0"></i>
+                <span class="sidebar-text">Import Data</span>
+            </a>
 
                 <a href="#" class="flex items-center space-x-2 px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg text-sm font-medium">
                     <i data-feather="file-text" class="w-4 h-4 flex-shrink-0"></i>

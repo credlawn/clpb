@@ -3,6 +3,8 @@ export function setupSidebarToggle() {
     const overlay = document.getElementById('sidebarOverlay');
     const toggleBtn = document.getElementById('toggleSidebar');
 
+    if (!sidebar || !overlay || !toggleBtn) return;
+
     function toggleSidebar() {
         sidebar.classList.toggle('-translate-x-full');
         overlay.classList.toggle('hidden');

@@ -5,6 +5,10 @@
 !.gitignore
 !main.go
 !pb_public/
+!pb_hooks/
+
+# ignore secrets
+pb_hooks/firebase-key.json
 
 # ignore macOS files
 .DS_Store

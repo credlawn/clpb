@@ -6,16 +6,6 @@ export function checkAuth() {
         return false;
     }
 
-    const user = pb.authStore.model;
-    const userRole = (user.role || '').toLowerCase();
-
-    if (userRole !== 'manager') {
-        pb.authStore.clear();
-        alert('Access denied. Manager access only.');
-        window.location.href = '/';
-        return false;
-    }
-
     return true;
 }
 
@@ -26,16 +16,22 @@ export function displayUserInfo() {
 
     const userName = user.name || user.email?.split('@')[0] || 'Manager';
 
-    document.getElementById('sidebarUserName').textContent = userName;
+    const sidebarUserName = document.getElementById('sidebarUserName');
+    if (sidebarUserName) {
+        sidebarUserName.textContent = userName;
+    }
 
-    const now = new Date();
-    const dateStr = now.toLocaleDateString('en-US', {
-        weekday: 'short',
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric'
-    });
-    document.getElementById('currentDate').textContent = dateStr;
+    const currentDate = document.getElementById('currentDate');
+    if (currentDate) {
+        const now = new Date();
+        const dateStr = now.toLocaleDateString('en-US', {
+            weekday: 'short',
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric'
+        });
+        currentDate.textContent = dateStr;
+    }
 }
 
 export function setupLogout() {

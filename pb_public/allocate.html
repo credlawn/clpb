@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lead Allocation - CLPB</title>
+    <link rel="stylesheet" href="clpb.css">
+    <link rel="stylesheet" href="style.css">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        @keyframes slide-in {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .animate-slide-in {
+            animation: slide-in 0.3s ease-out;
+            transition: all 0.3s ease-out;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/pocketbase/js-sdk@master/dist/pocketbase.umd.js"></script>
+</head>
+
+<body class="bg-gray-50">
+    <div class="flex h-screen overflow-hidden">
+        <div id="sidebarContainer"></div>
+
+        <div class="flex-1 flex flex-col overflow-hidden">
+            <header class="bg-white shadow-sm z-10">
+                <div class="flex items-center justify-between px-6 py-4">
+                    <div class="flex items-center gap-4">
+                        <button id="sidebarToggle" class="lg:hidden">
+                            <i data-feather="menu" class="w-6 h-6 text-gray-600"></i>
+                        </button>
+                        <h1 class="text-xl font-bold text-gray-800">Lead Allocation</h1>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <span class="text-sm text-gray-600">Selected: <span id="selectedCount"
+                                class="font-semibold text-blue-600">0</span> / 100</span>
+                        <button id="allocateBtn" disabled
+                            class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors text-sm font-medium">
+                            Allocate Selected
+                        </button>
+                        <div id="userInfo" class="flex items-center gap-3"></div>
+                    </div>
+                </div>
+            </header>
+
+            <main class="flex-1 overflow-y-auto p-6">
+                <div class="max-w-full mx-auto">
+                    <div class="bg-white rounded-lg shadow-sm">
+                        <div class="p-4 border-b border-gray-200">
+                            <div class="flex items-center gap-3">
+                                <div class="flex-1 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
+                                    <input type="text" id="searchInput" placeholder="Search by name or mobile..."
+                                        class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+
+                                    <select id="dataCodeFilter"
+                                        class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        <option value="">All Data Codes</option>
+                                    </select>
+
+                                    <select id="dataSubCodeFilter"
+                                        class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        <option value="">All Sub Codes</option>
+                                    </select>
+
+                                    <select id="customCodeFilter"
+                                        class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        <option value="">All Custom Codes</option>
+                                    </select>
+
+                                    <select id="dataStatusFilter"
+                                        class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        <option value="">All Status</option>
+                                        <option value="new">New</option>
+                                        <option value="used">Used</option>
+                                    </select>
+
+                                    <select id="allocationCountFilter"
+                                        class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        <option value="">All ALC</option>
+                                        <option value="0">0</option>
+                                        <option value="1">1</option>
+                                        <option value="2+">2+</option>
+                                    </select>
+
+                                    <select id="employeeCountFilter"
+                                        class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        <option value="">All EMP</option>
+                                        <option value="0">0</option>
+                                        <option value="1">1</option>
+                                        <option value="2+">2+</option>
+                                    </select>
+                                </div>
+                                <button id="resetFilters"
+                                    class="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                                    title="Reset Filters">
+                                    <i data-feather="x" class="w-4 h-4 text-gray-600"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full">
+                                <thead class="bg-gray-50 border-b border-gray-200">
+                                    <tr>
+                                        <th class="w-12 px-4 py-3 sticky left-0 bg-gray-50 z-10">
+                                            <input type="checkbox" id="selectAll"
+                                                class="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500">
+                                        </th>
+                                        <th
+                                            class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase whitespace-nowrap">
+                                            Customer</th>
+                                        <th
+                                            class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase whitespace-nowrap">
+                                            Mobile</th>
+                                        <th
+                                            class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase whitespace-nowrap">
+                                            City</th>
+                                        <th
+                                            class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase whitespace-nowrap">
+                                            Employer</th>
+                                        <th
+                                            class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase whitespace-nowrap">
+                                            Segment</th>
+                                        <th
+                                            class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase whitespace-nowrap">
+                                            Product</th>
+                                        <th
+                                            class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase whitespace-nowrap">
+                                            Decline Reason</th>
+                                        <th
+                                            class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase whitespace-nowrap">
+                                            Data Status</th>
+                                        <th
+                                            class="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase whitespace-nowrap">
+                                            Alloc.</th>
+                                        <th
+                                            class="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase whitespace-nowrap">
+                                            Emps</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="databaseTableBody" class="divide-y divide-gray-100">
+                                    <tr>
+                                        <td colspan="11" class="px-4 py-8 text-center text-gray-500 text-sm">Loading
+                                            database records...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="px-4 py-3 border-t border-gray-200 flex items-center justify-between">
+                            <div class="text-sm text-gray-600">
+                                Showing <span id="showingCount">0</span> records
+                            </div>
+                            <div class="flex gap-2">
+                                <button id="prevPage"
+                                    class="px-3 py-1 border border-gray-300 rounded text-sm hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">Previous</button>
+                                <button id="nextPage"
+                                    class="px-3 py-1 border border-gray-300 rounded text-sm hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">Next</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <div id="allocationModal"
+        class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
+        style="overflow: hidden;">
+        <div class="bg-white rounded-xl shadow-2xl w-full"
+            style="max-width: 42rem; max-height: 85vh; display: flex; flex-direction: column;">
+            <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between" style="flex-shrink: 0;">
+                <h3 class="text-lg font-semibold text-gray-800">Allocate <span id="modalSelectedCount">0</span> Records
+                </h3>
+                <button id="closeModal" class="text-gray-400 hover:text-gray-600">
+                    <i data-feather="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <div class="p-6" style="overflow-y: auto; flex: 1 1 auto;">
+                <div id="employeeList" class="space-y-3">
+                    <div class="text-center py-8 text-gray-500">Loading employees...</div>
+                </div>
+
+                <div class="mt-6 pt-4 border-t border-gray-200">
+                    <div class="flex items-center justify-between text-sm">
+                        <span class="text-gray-600">Total to Allocate:</span>
+                        <span id="totalAllocation" class="text-lg font-bold text-blue-600">0 / <span
+                                id="totalSelected">0</span></span>
+                    </div>
+                    <div id="allocationError" class="hidden mt-2 text-sm text-red-600"></div>
+                </div>
+            </div>
+
+            <div class="px-6 py-4 border-t border-gray-200 flex justify-end gap-3" style="flex-shrink: 0;">
+                <button id="cancelAllocation"
+                    class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm font-medium">Cancel</button>
+                <button id="confirmAllocation" disabled
+                    class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-sm font-medium">
+                    Confirm Allocation
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toastContainer" class="fixed top-4 right-4 z-50 flex flex-col gap-2"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+    <script type="module" src="js/utils/pb.js"></script>
+    <script type="module" src="js/utils/auth.js"></script>
+    <script type="module" src="js/utils/ui.js"></script>
+    <script type="module" src="js/components/sidebar.js"></script>
+    <script type="module" src="js/allocate.js"></script>
+</body>
+
+</html>

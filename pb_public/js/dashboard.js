@@ -68,7 +68,7 @@ document.addEventListener('visibilitychange', () => {
 
 async function loadLeadsData() {
     try {
-        const response = await fetch('/api/leads/stats', {
+        const response = await fetch('/api/dashboard/summary', {
             headers: { 'Authorization': pb.authStore.token }
         });
         if (response.ok) {
