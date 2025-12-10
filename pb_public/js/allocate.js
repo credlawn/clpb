@@ -70,17 +70,13 @@ function populateFilters() {
     const leadStatusFilterMobile = document.getElementById('leadStatusFilterMobile');
 
     dataCodes.forEach(code => {
-        const option = document.createElement('option');
-        option.value = code;
-        option.textContent = code;
-        dataCodeFilter.appendChild(option);
+        dataCodeFilter.add(new Option(code, code));
+        if (dataCodeFilterMobile) dataCodeFilterMobile.add(new Option(code, code));
     });
 
     dataSubCodes.forEach(code => {
-        const option = document.createElement('option');
-        option.value = code;
-        option.textContent = code;
-        dataSubCodeFilter.appendChild(option);
+        dataSubCodeFilter.add(new Option(code, code));
+        if (dataSubCodeFilterMobile) dataSubCodeFilterMobile.add(new Option(code, code));
     });
 
     leadStatuses.sort().forEach(code => {
@@ -89,10 +85,8 @@ function populateFilters() {
     });
 
     customCodes.forEach(code => {
-        const option = document.createElement('option');
-        option.value = code;
-        option.textContent = code;
-        customCodeFilter.appendChild(option);
+        customCodeFilter.add(new Option(code, code));
+        if (customCodeFilterMobile) customCodeFilterMobile.add(new Option(code, code));
     });
 }
 
@@ -111,16 +105,19 @@ function applyFilters() {
             record.customer_name?.toLowerCase().includes(searchTerm) ||
             record.mobile_no?.includes(searchTerm) ||
             record.city?.toLowerCase().includes(searchTerm) ||
+            record.lead_status?.toLowerCase().includes(searchTerm) ||
             record.employer?.toLowerCase().includes(searchTerm);
         const matchesDataCode = !dataCode || record.data_code === dataCode;
         const matchesDataSubCode = !dataSubCode || record.data_sub_code === dataSubCode;
         const matchesCustomCode = !customCode || record.custom_code === customCode;
 
         let matchesDataStatus = true;
-        if (dataStatus === 'new') {
-            matchesDataStatus = !record.data_status || record.data_status === 'new';
-        } else if (dataStatus === 'used') {
-            matchesDataStatus = true; // New includes null/empty
+        if (!searchTerm) {
+            if (dataStatus === 'new') {
+                matchesDataStatus = !record.data_status || record.data_status === 'new';
+            } else if (dataStatus === 'used') {
+                matchesDataStatus = true; // New includes null/empty
+            }
         }
 
         const matchesLeadStatus = !leadStatus || record.lead_status === leadStatus;
