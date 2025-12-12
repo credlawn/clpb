@@ -30,6 +30,7 @@ func main() {
 	pb_hooks.SetupLeadReallocation(app)
 	pb_hooks.SetupLeadShuffle(app)
 	pb_hooks.SetupLeadsSync(app)
+	pb_hooks.SetupN8NSync(app)
 
 	app.OnRecordCreateExecute("database").BindFunc(func(e *core.RecordEvent) error {
 		mobileNo := e.Record.GetString("mobile_no")
