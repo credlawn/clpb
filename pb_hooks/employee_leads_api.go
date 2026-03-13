@@ -9,10 +9,10 @@ import (
 )
 
 type EmployeeWithLeads struct {
-	EmployeeCode   string `db:"employee_code" json:"employee_code"`
-	EmployeeName   string `db:"employee_name" json:"employee_name"`
-	NewLeadsCount  int    `db:"new_leads_count" json:"new_leads_count"`
-	TotalLeads     int    `db:"total_leads" json:"total_leads"`
+	EmployeeCode  string `db:"employee_code" json:"employee_code"`
+	EmployeeName  string `db:"employee_name" json:"employee_name"`
+	NewLeadsCount int    `db:"new_leads_count" json:"new_leads_count"`
+	TotalLeads    int    `db:"total_leads" json:"total_leads"`
 }
 
 func SetupEmployeeLeadsAPI(app *pocketbase.PocketBase) {

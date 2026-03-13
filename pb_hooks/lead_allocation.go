@@ -195,14 +195,14 @@ func SetupLeadAllocation(app *pocketbase.PocketBase) {
 
 					currentCount := dbRecord.GetInt("allocation_count")
 					newCount := currentCount + 1
-					
+
 					_, err = e.App.DB().NewQuery("UPDATE database SET allocation_count = {:count}, employee_count = {:emp_count}, data_status = 'used' WHERE id = {:id}").
 						Bind(dbx.Params{
 							"count":     newCount,
 							"emp_count": uniqueEmployees.Count,
 							"id":        dbRecordID,
 						}).Execute()
-					
+
 					if err != nil {
 						e.App.Logger().Error("Failed to update database", "error", err)
 					}

@@ -30,13 +30,38 @@ func handleEmployeeStats(c *core.RequestEvent) error {
 	type User struct {
 		EmployeeCode string `db:"employee_code" json:"employee_code"`
 		EmployeeName string `db:"employee_name" json:"employee_name"`
+		WFH          bool   `db:"wfh" json:"wfh"`
+		Disabled     bool   `db:"disabled" json:"disabled"`
 	}
 
 	var users []User
-	err := c.App.DB().NewQuery("SELECT employee_code, employee_name FROM users WHERE disabled = false AND LOWER(role) = 'employee'").All(&users)
+
+	// Step 1: Get all ACTIVE employees (always show, even with 0 count)
+	var activeUsers []User
+	err := GetActiveEmployeesQuery(c.App).
+		Select("employee_code", "employee_name", "wfh", "disabled").
+		All(&activeUsers)
 
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
+	}
+
+	// Step 2: Get DISABLED employees who have activity in date range
+	if dateFilter != "" {
+		var disabledUsers []User
+		disabledQuery := `
+			SELECT DISTINCT u.employee_code, u.employee_name, u.wfh, u.disabled
+			FROM users u
+			INNER JOIN case_login cl ON u.employee_code = cl.employee_code
+			WHERE u.disabled = true AND ` + dateFilter
+
+		c.App.DB().NewQuery(disabledQuery).All(&disabledUsers)
+
+		// Combine both lists
+		users = append(activeUsers, disabledUsers...)
+	} else {
+		// No date filter, just use active employees
+		users = activeUsers
 	}
 
 	type CountResult struct {
@@ -48,6 +73,7 @@ func handleEmployeeStats(c *core.RequestEvent) error {
 	for _, user := range users {
 		var ipaResult, ipdResult CountResult
 
+		// Count IPA/IPD for each employee
 		ipaQuery := "SELECT COUNT(*) as count FROM case_login WHERE employee_code = {:code} AND lead_status = 'IP Approved'"
 		if dateFilter != "" {
 			ipaQuery += " AND " + dateFilter
@@ -64,6 +90,8 @@ func handleEmployeeStats(c *core.RequestEvent) error {
 		results = append(results, map[string]interface{}{
 			"employee_name": user.EmployeeName,
 			"employee_code": user.EmployeeCode,
+			"wfh":           user.WFH,
+			"disabled":      user.Disabled,
 			"ipa":           ipaResult.Count,
 			"ipd":           ipdResult.Count,
 		})
