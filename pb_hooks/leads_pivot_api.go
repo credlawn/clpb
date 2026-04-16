@@ -93,6 +93,10 @@ func handleLeadsAnalytics(c *core.RequestEvent) error {
 			"u.employee_code",
 			"u.employee_name",
 			"u.wfh",
+			"u.role",
+			"u.disabled",
+			"u.designation",
+
 			"(SELECT COUNT(id) FROM leads WHERE employee_code = u.employee_code AND lead_status = {:statusNew}) as new_count",
 			"COUNT(CASE WHEN l.lead_status IS NOT NULL AND l.lead_status != {:statusNew2} THEN 1 END) as total_activity",
 			"COUNT(CASE WHEN l.lead_status = 'IP Approved' THEN 1 END) as ip_approved_count",
@@ -143,13 +147,15 @@ func handleLeadsAnalytics(c *core.RequestEvent) error {
 	var summaryCnr, summaryDenied, summaryCalled int
 
 	for rows.Next() {
-		var employeeCode, employeeName string
-		var wfh bool
+		var employeeCode, employeeName, role, designation string
+		var wfh, disabled bool
+
 		var newCount, totalActivity, ipApproved, ipDecline, followUp int
 		var noDocs, alreadyCarded, notEligible, cnr, denied, called int
 
 		err := rows.Scan(
-			&employeeCode, &employeeName, &wfh,
+			&employeeCode, &employeeName, &wfh, &role, &disabled, &designation,
+
 			&newCount, &totalActivity,
 			&ipApproved, &ipDecline, &followUp,
 			&noDocs, &alreadyCarded, &notEligible,
@@ -178,6 +184,10 @@ func handleLeadsAnalytics(c *core.RequestEvent) error {
 			"employee_code":  employeeCode,
 			"employee_name":  employeeName,
 			"wfh":            wfh,
+			"role":           role,
+			"disabled":       disabled,
+			"designation":    designation,
+
 			"new":            newCount,
 			"total":          totalActivity,
 			"productive":     productive,

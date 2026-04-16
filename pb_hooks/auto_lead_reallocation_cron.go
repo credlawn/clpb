@@ -275,6 +275,12 @@ func fetchLeadsByPriorityGroup(app *pocketbase.PocketBase, excludeEmployeeCode s
 				AND lead_status = {:status}
 				AND allocation_count = {:count}
 				AND (lead_status_date < {:cutoff} OR lead_status_date IS NULL)
+				AND (no_reallocation IS NULL OR no_reallocation = false)
+				AND NOT EXISTS (
+					SELECT 1 FROM custom_code_list 
+					WHERE custom_code_list.custom_code = database.custom_code
+					AND custom_code_list.custom_code != ''
+				)
 			ORDER BY RANDOM()
 			LIMIT 100
 		`
@@ -338,6 +344,12 @@ func fetchLeadsByPriority(app *pocketbase.PocketBase, excludeEmployeeCode string
 				AND lead_status = {:status}
 				AND allocation_count = {:count}
 				AND (lead_status_date < {:today} OR lead_status_date IS NULL)
+				AND (no_reallocation IS NULL OR no_reallocation = false)
+				AND NOT EXISTS (
+					SELECT 1 FROM custom_code_list 
+					WHERE custom_code_list.custom_code = database.custom_code
+					AND custom_code_list.custom_code != ''
+				)
 			ORDER BY RANDOM()
 			LIMIT {:limit}
 		`
