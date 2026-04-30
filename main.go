@@ -11,12 +11,21 @@ import (
 	"github.com/pocketbase/pocketbase"
 	"github.com/pocketbase/pocketbase/apis"
 	"github.com/pocketbase/pocketbase/core"
+	"github.com/pocketbase/pocketbase/plugins/migratecmd"
 	"github.com/pocketbase/pocketbase/tools/hook"
 	"github.com/pocketbase/pocketbase/tools/osutils"
+
+	_ "custompb/migrations"
 )
 
 func main() {
 	app := pocketbase.New()
+
+	migratecmd.MustRegister(app, app.RootCmd, migratecmd.Config{
+		// auto-run migrations on startup
+		Automigrate:  true,
+		TemplateLang: migratecmd.TemplateLangGo,
+	})
 
 	pb_hooks.InitFirebase()
 	pb_hooks.SetupIPANotification(app)
