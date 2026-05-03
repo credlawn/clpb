@@ -77,13 +77,13 @@ func processIPANotification(e *core.RecordEvent) {
 		todayCount = len(records)
 	}
 
-	userGroup, err := e.App.FindFirstRecordByData("user_group", "group_name", "ipa_notification")
+	// 1. Identify users to notify (Active, Credit Card vertical, On Duty, Not Opted-out)
+	filter := "disabled = false && stop_fcm_notification = false && on_duty = true && vertical ~ 'credit card' && fcm_token != ''"
+	users, err := e.App.FindRecordsByFilter("users", filter, "", 0, 0, nil)
 	if err != nil {
 		return
 	}
 
-	userIds := userGroup.GetStringSlice("users")
-	
 	title := "🎉 Wow! New IP Approval"
 	message := ""
 	
@@ -94,14 +94,10 @@ func processIPANotification(e *core.RecordEvent) {
 		message = "Good work " + employeeName + "! for new IP approval. You got total " + strconv.Itoa(totalToday) + " IP Approval today."
 	}
 
-	for _, userId := range userIds {
-		user, err := e.App.FindRecordById("users", userId)
-		if err != nil {
-			continue
-		}
+	for _, user := range users {
 		token := user.GetString("fcm_token")
 		if token != "" {
-			go SendNotification(token, title, message)
+			go SendNotification(token, title, message, "ipa_notification")
 		}
 	}
 }

@@ -32,6 +32,7 @@ func main() {
 	pb_hooks.SetupCaseLoginHook(app)
 	pb_hooks.SetupCallCount(app)
 	pb_hooks.SetupDisableUserCheck(app)
+	pb_hooks.SetupUserNotificationSyncHook(app)
 	pb_hooks.SetupLeadAllocation(app)
 	pb_hooks.SetupEmployeeLeadsAPI(app)
 	pb_hooks.SetupLeadsAPI(app)
@@ -47,6 +48,9 @@ func main() {
 	pb_hooks.SetupN8NSync(app)
 	pb_hooks.SetupCallLogsAPI(app)
 	pb_hooks.SetupLeadsPivotAPI(app)
+	pb_hooks.SetupAttendanceSyncHook(app)
+	pb_hooks.SetupOnDutyCron(app)
+	pb_hooks.SetupBirthdayReminderCron(app)
 	pb_hooks.SetupDatabaseSyncCron(app)         // NEW: Daily sync cron at 1 AM
 	pb_hooks.SetupAutoLeadReallocationCron(app) // NEW: Auto lead reallocation every 5 minutes
 

@@ -23,7 +23,7 @@ func InitFirebase() {
 	}
 }
 
-func SendNotification(token, title, body string) {
+func SendNotification(token, title, body, channelId string) {
 	ctx := context.Background()
 	msg := &messaging.Message{
 		Token: token,
@@ -33,11 +33,12 @@ func SendNotification(token, title, body string) {
 		},
 		Data: map[string]string{
 			"click_action": "FLUTTER_NOTIFICATION_CLICK",
+			"channel_id":   channelId, // Added for foreground handling if needed
 		},
 		Android: &messaging.AndroidConfig{
 			Priority: "high",
 			Notification: &messaging.AndroidNotification{
-				ChannelID: "default_channel",
+				ChannelID: channelId,
 				Sound:     "default",
 			},
 		},
