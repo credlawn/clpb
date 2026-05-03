@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/pocketbase/pocketbase"
+	"github.com/pocketbase/pocketbase/core"
 )
 
 // SetupBirthdayReminderCron sets up a daily cron job at 10:00 AM IST (04:30 UTC)
@@ -20,14 +21,16 @@ func SetupBirthdayReminderCron(app *pocketbase.PocketBase) {
 		todayMD := nowIST.Format("01-02") // Month-Day format (e.g., 05-03)
 
 		// 2. Find Users who have a birthday today
-		// We fetch all active users and check their DOB in Go for simplicity with the "priority" logic
 		activeUsers, err := app.FindRecordsByFilter("users", "disabled = false", "", 0, 0, nil)
 		if err != nil {
 			app.Logger().Error("Failed to fetch active users for birthday check", "error", err)
 			return
 		}
 
-		var birthdayNames []string
+		birthdayUsers := []*core.Record{}
+		birthdayUserIds := make(map[string]bool)
+		birthdayNames := []string{}
+
 		for _, user := range activeUsers {
 			dob := user.GetString("original_date_of_birth")
 			if dob == "" {
@@ -35,9 +38,10 @@ func SetupBirthdayReminderCron(app *pocketbase.PocketBase) {
 			}
 
 			if dob != "" {
-				// PocketBase date format: "2006-01-02 15:04:05.000Z"
 				t, err := time.Parse("2006-01-02 15:04:05.000Z", dob)
 				if err == nil && t.Format("01-02") == todayMD {
+					birthdayUsers = append(birthdayUsers, user)
+					birthdayUserIds[user.Id] = true
 					birthdayNames = append(birthdayNames, user.GetString("employee_name"))
 				}
 			}
@@ -49,36 +53,45 @@ func SetupBirthdayReminderCron(app *pocketbase.PocketBase) {
 			return
 		}
 
-		// 4. Construct the Smart Message
+		// 4. Prepare Team Message (Alert for everyone else)
+		var teamMessage string
 		title := "Birthday Celebration!"
-		var message string
 		if len(birthdayNames) == 1 {
-			message = fmt.Sprintf("Happy Birthday %s! Credlawn Family wishes you a fantastic day ahead! 🎉🎂", birthdayNames[0])
+			teamMessage = fmt.Sprintf("%s has a birthday today! Let's wish a wonderful day ahead! 🎉🎂", birthdayNames[0])
 		} else {
-			// Combine names: "Name1, Name2 & Name3"
 			last := birthdayNames[len(birthdayNames)-1]
 			others := birthdayNames[:len(birthdayNames)-1]
 			combinedNames := strings.Join(others, ", ") + " & " + last
-			message = fmt.Sprintf("Big Celebration! Happy Birthday to %s! Credlawn Family wishes you all a fantastic day ahead! 🎉🎂", combinedNames)
+			teamMessage = fmt.Sprintf("%s have birthdays today! Let's wish a wonderful day ahead! 🎉🎂", combinedNames)
 		}
 
-		// 5. Identify Recipients (TEMPORARY: bh_access = true filter for testing)
-		recipientFilter := "disabled = false && stop_fcm_notification = false && fcm_token != '' && bh_access = true"
+		// 5. Identify Recipients (Production: All active users with FCM tokens and notifications enabled)
+		recipientFilter := "disabled = false && stop_fcm_notification = false && fcm_token != ''"
 		recipients, err := app.FindRecordsByFilter("users", recipientFilter, "", 0, 0, nil)
 		if err != nil {
 			app.Logger().Error("Failed to fetch recipients for birthday broadcast", "error", err)
 			return
 		}
 
-		// 6. Broadcast to all recipients
+		// 6. Send Personalized Messages
 		count := 0
 		for _, recipient := range recipients {
 			token := recipient.GetString("fcm_token")
-			if token != "" {
-				// Re-using the core SendNotification engine
-				go SendNotification(token, title, message, "celebration_notification")
-				count++
+			if token == "" {
+				continue
 			}
+
+			var finalMessage string
+			// If this recipient is the birthday person
+			if birthdayUserIds[recipient.Id] {
+				finalMessage = fmt.Sprintf("Happy Birthday %s! Credlawn Family wishes you a fantastic day ahead! 🎉🎂", recipient.GetString("employee_name"))
+			} else {
+				// Otherwise send the team alert
+				finalMessage = teamMessage
+			}
+
+			go SendNotification(token, title, finalMessage, "celebration_notification")
+			count++
 		}
 
 		app.Logger().Info("Birthday Broadcast Completed", "birthdays_found", len(birthdayNames), "sent_to", count)
