@@ -144,7 +144,8 @@ func SetupImportWorker(app core.App) {
 				return
 			}
 
-			record.Set("status", "processing")
+			// Stage 1: Reading file
+			record.Set("status", "reading")
 			_ = app.Save(record)
 
 			collectionName := record.GetString("target_collection")
@@ -289,11 +290,19 @@ func SetupImportWorker(app core.App) {
 			record.Set("updated_records", 0)
 			record.Set("skipped_records", 0)
 			record.Set("import_date", time.Now().UTC().Format(time.RFC3339))
+			// Stage 2: Validating setup/dates
+			record.Set("status", "validating")
 			_ = app.Save(record)
 
 			app.Logger().Info("Import: starting upsert", "total", total, "mode", importMode)
 
-			processed, created, updated, skipped := 0, 0, 0, 0
+			processed, created, updated, skipped, failed := 0, 0, 0, 0, 0
+			record.Set("failed_records", 0)
+			_ = app.Save(record)
+
+			// Stage 3: Actual processing
+			record.Set("status", "processing")
+			_ = app.Save(record)
 
 			for rowIdx, row := range dataRows {
 				rowData := make(map[string]any)
@@ -303,7 +312,7 @@ func SetupImportWorker(app core.App) {
 					idx, exists := headerIndex[excelCol]
 					cellVal := ""
 					if exists && idx < len(row) {
-						cellVal = strings.TrimSpace(row[idx])
+						cellVal = cleanValue(row[idx])
 					}
 
 					if dateFields[dbField] {
@@ -315,7 +324,7 @@ func SetupImportWorker(app core.App) {
 							cellRef := fmt.Sprintf("%s%d", colLetter, excelRowNum)
 							rawVal, _ := xlsx.GetCellValue(sheetName, cellRef,
 								excelize.Options{RawCellValue: true})
-							rawVal = strings.TrimSpace(rawVal)
+							rawVal = cleanValue(rawVal)
 							if rawVal != "" {
 								if f, err := strconv.ParseFloat(rawVal, 64); err == nil && f > 1 {
 									// Valid Excel serial → ExcelDateToTime (100% accurate)
@@ -345,6 +354,22 @@ func SetupImportWorker(app core.App) {
 					} else {
 						rowData[dbField] = cellVal
 					}
+				}
+
+				// ── Derivation: Compute Month-Year fields (Mar-26) ────────────────
+				if val, ok := rowData["arn_date"].(string); ok && val != "" {
+					rowData["arn_month"] = formatToMonthYear(val)
+				}
+				if val, ok := rowData["final_decision_date"].(string); ok && val != "" {
+					rowData["decision_month"] = formatToMonthYear(val)
+				}
+
+				// ── Derivation: Uppercase specific fields ────────────────────────
+				if val, ok := rowData["customer_name"].(string); ok {
+					rowData["customer_name"] = strings.ToUpper(val)
+				}
+				if val, ok := rowData["state"].(string); ok {
+					rowData["state"] = strings.ToUpper(val)
 				}
 
 				upsertVal, hasKey := rowData[upsertKey]
@@ -404,7 +429,7 @@ func SetupImportWorker(app core.App) {
 
 				if opErr != nil {
 					app.Logger().Warn("Import: row error", "error", opErr)
-					skipped++
+					failed++
 				} else {
 					switch opType {
 					case "created":
@@ -425,6 +450,7 @@ func SetupImportWorker(app core.App) {
 						latest.Set("created_records", created)
 						latest.Set("updated_records", updated)
 						latest.Set("skipped_records", skipped)
+						latest.Set("failed_records", failed)
 						_ = app.Save(latest)
 					}
 				}
@@ -436,6 +462,7 @@ func SetupImportWorker(app core.App) {
 				latest.Set("created_records", created)
 				latest.Set("updated_records", updated)
 				latest.Set("skipped_records", skipped)
+				latest.Set("failed_records", failed)
 				latest.Set("status", "completed")
 				_ = app.Save(latest)
 			}
@@ -501,8 +528,34 @@ func parseExcelDateToUTC(raw string) (string, bool) {
 }
 
 // trimSpace removes leading/trailing whitespace
-func trimSpace(s string) string {
-	return strings.TrimSpace(s)
+func trimSpace(s string) string { return strings.TrimSpace(s) }
+
+// formatToMonthYear converts a UTC date string to "Jan-06" format (e.g. Mar-26)
+func formatToMonthYear(dateStr string) string {
+	t, err := time.Parse("2006-01-02 15:04:05.000Z", dateStr)
+	if err != nil {
+		// Fallback if fractional seconds are missing
+		t, err = time.Parse("2006-01-02 15:04:05Z", dateStr)
+	}
+	if err != nil {
+		return ""
+	}
+	// Go layout for Month-Year (Mar-26)
+	return t.Format("Jan-06")
+}
+
+// cleanValue removes leading/trailing whitespace and filters out
+// common Excel junk values like #N/A, #VALUE!, and single dashes.
+func cleanValue(s string) string {
+	v := strings.TrimSpace(s)
+	if v == "" || v == "-" || v == "." {
+		return ""
+	}
+	upper := strings.ToUpper(v)
+	if upper == "#N/A" || upper == "#VALUE!" || upper == "#REF!" || upper == "NULL" {
+		return ""
+	}
+	return v
 }
 
 // marshalMapping serializes a string map to JSON string (helper)
