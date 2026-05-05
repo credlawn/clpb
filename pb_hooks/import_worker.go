@@ -54,7 +54,7 @@ func SetupImportWorker(app core.App) {
 			}
 			defer fsys.Close()
 
-			f, err := fsys.GetFile(record.BaseFilesPath() + "/" + fileName)
+			f, err := fsys.GetReader(record.BaseFilesPath() + "/" + fileName)
 			if err != nil {
 				return apis.NewInternalServerError("Cannot read file", err)
 			}
@@ -203,7 +203,7 @@ func SetupImportWorker(app core.App) {
 			}
 			defer fsys.Close()
 
-			f, err := fsys.GetFile(record.BaseFilesPath() + "/" + fileName)
+			f, err := fsys.GetReader(record.BaseFilesPath() + "/" + fileName)
 			if err != nil {
 				app.Logger().Error("Import: cannot get file", "file", fileName, "error", err)
 				record.Set("status", "failed")

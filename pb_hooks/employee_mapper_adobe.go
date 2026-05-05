@@ -91,4 +91,8 @@ func RunEmployeeMappingAdobe(app core.App, jobId string) {
 	// 8. Trigger BKYC Sync
 	// Sync actionable BKYC records to the bkyc collection
 	SyncBKYCRecords(app, jobId)
+
+	// 9. Send Team Notification
+	// Alert the team that the sync pipeline has fully completed
+	SendImportCompletionNotification(app)
 }
