@@ -49,6 +49,11 @@ func processIPApproved(e *core.RecordEvent, arnNo string) {
 		return
 	}
 
+	// NEW: Skip if arn_no already exists to prevent duplicate hijacking
+	if existingArn, _ := e.App.FindFirstRecordByData("case_login", "arn_no", arnNo); existingArn != nil {
+		return
+	}
+
 	collection, err := e.App.FindCollectionByNameOrId("case_login")
 	if err != nil {
 		return

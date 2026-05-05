@@ -83,4 +83,8 @@ func RunEmployeeMappingAdobe(app core.App, jobId string) {
 	// 6. Trigger Product Master Sync
 	// Ensures all new product codes from this dump are registered for payout settings.
 	SyncProductMaster(app, jobId)
+
+	// 7. Trigger VKYC Sync
+	// Sync actionable VKYC links to the vkyc collection
+	SyncVKYCRecords(app, jobId)
 }

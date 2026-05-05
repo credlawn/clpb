@@ -230,4 +230,8 @@ func SyncApprovedCards(app core.App, jobId string) {
 		"created", createdCount,
 		"updated", updatedCount,
 	)
+
+	// 6. Trigger Activation Sync (Next step in pipeline)
+	// We pass 'arns' which contains all the ARNs we just processed from Adobe Dump
+	SyncActivationCards(app, importDateStr, jobId, arns)
 }
