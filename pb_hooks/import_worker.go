@@ -347,8 +347,6 @@ func SetupImportWorker(app core.App) {
 						}
 
 						if !parsed && cellVal != "" {
-							app.Logger().Warn("Import: could not parse date",
-								"field", dbField, "value", cellVal)
 							rowData[dbField] = nil
 						}
 					} else {
@@ -407,6 +405,7 @@ func SetupImportWorker(app core.App) {
 						for k, v := range rowData {
 							existing.Set(k, v)
 						}
+						existing.Set("import_job_id", recordId)
 						opType = "updated"
 						return txApp.Save(existing)
 
@@ -415,6 +414,7 @@ func SetupImportWorker(app core.App) {
 							for k, v := range rowData {
 								existing.Set(k, v)
 							}
+							existing.Set("import_job_id", recordId)
 							opType = "updated"
 							return txApp.Save(existing)
 						}
@@ -422,13 +422,13 @@ func SetupImportWorker(app core.App) {
 						for k, v := range rowData {
 							newRec.Set(k, v)
 						}
+						newRec.Set("import_job_id", recordId)
 						opType = "created"
 						return txApp.Save(newRec)
 					}
 				})
 
 				if opErr != nil {
-					app.Logger().Warn("Import: row error", "error", opErr)
 					failed++
 				} else {
 					switch opType {
@@ -443,7 +443,7 @@ func SetupImportWorker(app core.App) {
 
 				processed++
 
-				// Batch progress update every 100 records
+				// Update Progress in DB only (No log spam)
 				if processed%100 == 0 {
 					if latest, err := app.FindRecordById("import_jobs", record.Id); err == nil {
 						latest.Set("processed_records", processed)
@@ -467,12 +467,17 @@ func SetupImportWorker(app core.App) {
 				_ = app.Save(latest)
 			}
 
-			app.Logger().Info("Import: completed",
+			app.Logger().Info("Import Job Finished",
+				"collection", collectionName,
 				"total", total,
 				"created", created,
 				"updated", updated,
 				"skipped", skipped,
+				"failed", failed,
 			)
+
+			// Trigger Background Employee Mapping
+			go RunEmployeeMapping(app, recordId)
 		}(recordId)
 
 		return e.Next()
