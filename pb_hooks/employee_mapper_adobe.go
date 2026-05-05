@@ -87,4 +87,8 @@ func RunEmployeeMappingAdobe(app core.App, jobId string) {
 	// 7. Trigger VKYC Sync
 	// Sync actionable VKYC links to the vkyc collection
 	SyncVKYCRecords(app, jobId)
+
+	// 8. Trigger BKYC Sync
+	// Sync actionable BKYC records to the bkyc collection
+	SyncBKYCRecords(app, jobId)
 }

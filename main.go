@@ -57,6 +57,7 @@ func main() {
 	pb_hooks.SetupImportCleanup(app)            // NEW: Daily Excel File Cleanup Cron (1 AM IST)
 	pb_hooks.SetupActivationCleanupCron(app)    // NEW: Activation cleanup Cron (1:05 AM IST)
 	pb_hooks.SetupVKYCCleanupCron(app)          // NEW: VKYC cleanup Cron (1:10 AM IST)
+	pb_hooks.SetupBKYCCleanupCron(app)          // NEW: BKYC cleanup Cron (1:15 AM IST)
 	pb_hooks.SetupCaseLoginCascade(app)         // NEW: Auto-cascade employee details on case_login update
 
 	app.OnRecordCreateExecute("database").BindFunc(func(e *core.RecordEvent) error {
