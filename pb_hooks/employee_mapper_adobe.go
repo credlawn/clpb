@@ -7,9 +7,9 @@ import (
 	"github.com/pocketbase/pocketbase/core"
 )
 
-// RunEmployeeMapping is a background task that enriches imported records
+// RunEmployeeMappingAdobe is a background task that enriches imported records
 // with employee data from the case_login collection.
-func RunEmployeeMapping(app core.App, jobId string) {
+func RunEmployeeMappingAdobe(app core.App, jobId string) {
 	// 1. Load Employee Cache (case_login)
 	employeeMap := make(map[string]map[string]string)
 	

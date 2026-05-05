@@ -477,7 +477,9 @@ func SetupImportWorker(app core.App) {
 			)
 
 			// Trigger Background Employee Mapping
-			go RunEmployeeMapping(app, recordId)
+			if collectionName == "adobe_dump" {
+				go RunEmployeeMappingAdobe(app, recordId)
+			}
 		}(recordId)
 
 		return e.Next()
