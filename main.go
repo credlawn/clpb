@@ -53,6 +53,7 @@ func main() {
 	pb_hooks.SetupBirthdayReminderCron(app)
 	pb_hooks.SetupDatabaseSyncCron(app)         // NEW: Daily sync cron at 1 AM
 	pb_hooks.SetupAutoLeadReallocationCron(app) // NEW: Auto lead reallocation every 5 minutes
+	pb_hooks.SetupImportWorker(app)             // NEW: Background Excel Import Worker
 
 	app.OnRecordCreateExecute("database").BindFunc(func(e *core.RecordEvent) error {
 		mobileNo := e.Record.GetString("mobile_no")
