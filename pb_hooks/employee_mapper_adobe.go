@@ -27,7 +27,7 @@ func RunEmployeeMappingAdobe(app core.App, jobId string) {
 			employeeMap[arnNo] = map[string]string{
 				"name": rec.GetString("employee_name"),
 				"code": rec.GetString("employee_code"),
-				"mob":  rec.GetString("mobile_no"),
+				"mob":  rec.GetString("mobile_number"), // CORRECTED FIELD NAME HERE
 			}
 		}
 	}
@@ -51,13 +51,13 @@ func RunEmployeeMappingAdobe(app core.App, jobId string) {
 			// Found in master data
 			rec.Set("employee_name", data["name"])
 			rec.Set("employee_code", data["code"])
-			rec.Set("mobile_no", data["mob"])
+			rec.Set("mobile_no", data["mob"]) // RESTORED
 			mappedCount++
 		} else {
 			// Not found - Set as UNMAPPED
 			rec.Set("employee_name", "UNMAPPED")
 			rec.Set("employee_code", "0")
-			rec.Set("mobile_no", "0")
+			rec.Set("mobile_no", "0") // RESTORED
 			unmappedCount++
 		}
 
@@ -79,4 +79,8 @@ func RunEmployeeMappingAdobe(app core.App, jobId string) {
 		"mapped", mappedCount,
 		"unmapped", unmappedCount,
 	)
+
+	// 6. Trigger Product Master Sync
+	// Ensures all new product codes from this dump are registered for payout settings.
+	SyncProductMaster(app, jobId)
 }

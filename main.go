@@ -55,6 +55,7 @@ func main() {
 	pb_hooks.SetupAutoLeadReallocationCron(app) // NEW: Auto lead reallocation every 5 minutes
 	pb_hooks.SetupImportWorker(app)             // NEW: Background Excel Import Worker
 	pb_hooks.SetupImportCleanup(app)            // NEW: Daily Excel File Cleanup Cron (1 AM IST)
+	pb_hooks.SetupActivationCleanupCron(app)    // NEW: Activation cleanup Cron (1:05 AM IST)
 
 	app.OnRecordCreateExecute("database").BindFunc(func(e *core.RecordEvent) error {
 		mobileNo := e.Record.GetString("mobile_no")
