@@ -12,7 +12,7 @@ import (
 var FCM *messaging.Client
 
 func InitFirebase() {
-	opt := option.WithCredentialsFile("pb_hooks/firebase-key.json")
+	opt := option.WithCredentialsFile("pb_data/firebase-key.json")
 	app, err := firebase.NewApp(context.Background(), nil, opt)
 	if err != nil {
 		log.Fatal(err)
