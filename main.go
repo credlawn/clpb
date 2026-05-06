@@ -59,6 +59,8 @@ func main() {
 	pb_hooks.SetupVKYCCleanupCron(app)          // NEW: VKYC cleanup Cron (1:10 AM IST)
 	pb_hooks.SetupBKYCCleanupCron(app)          // NEW: BKYC cleanup Cron (1:15 AM IST)
 	pb_hooks.SetupCaseLoginCascade(app)         // NEW: Auto-cascade employee details on case_login update
+	pb_hooks.SetupEmployeeCodeSync(app)         // NEW: Universal sync for employee_code changes
+	pb_hooks.SetupEmployeeCodeInterceptor(app)  // NEW: Global interceptor for offline/stale app syncs
 
 	app.OnRecordCreateExecute("database").BindFunc(func(e *core.RecordEvent) error {
 		mobileNo := e.Record.GetString("mobile_no")

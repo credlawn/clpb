@@ -13,6 +13,14 @@ import (
 func SetupBirthdayReminderCron(app *pocketbase.PocketBase) {
 	// Cron pattern: "30 4 * * *" = 04:30 UTC = 10:00 AM IST
 	app.Cron().MustAdd("birthday_broadcast", "30 4 * * *", func() {
+		// Global Notification Setting Check (Fallback ON)
+		if setting, err := app.FindFirstRecordByData("notification_setting", "notification_name", "birthday_notification"); err == nil && setting != nil {
+			if !setting.GetBool("notification_status") {
+				app.Logger().Info("Birthday Broadcast: Disabled globally via notification_setting")
+				return
+			}
+		}
+
 		app.Logger().Info("Birthday Broadcast Cron Started")
 
 		// 1. Get Today's Date in IST

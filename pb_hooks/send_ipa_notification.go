@@ -23,6 +23,13 @@ func SetupIPANotification(app core.App) {
 }
 
 func processIPANotification(e *core.RecordEvent) {
+	// Global Notification Setting Check (Fallback ON)
+	if setting, err := e.App.FindFirstRecordByData("notification_setting", "notification_name", "ipa_notification"); err == nil && setting != nil {
+		if !setting.GetBool("notification_status") {
+			return // Disabled globally
+		}
+	}
+
 	status := e.Record.GetString("lead_status")
 	if status != "IP Approved" {
 		return

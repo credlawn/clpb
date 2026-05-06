@@ -7,6 +7,14 @@ import (
 // SendImportCompletionNotification sends a push notification to the relevant team
 // members after the Adobe Dump sync pipeline completes successfully.
 func SendImportCompletionNotification(app core.App) {
+	// Global Notification Setting Check (Fallback ON)
+	if setting, err := app.FindFirstRecordByData("notification_setting", "notification_name", "bank_dump_notification"); err == nil && setting != nil {
+		if !setting.GetBool("notification_status") {
+			app.Logger().Info("Import Notification: Disabled globally via notification_setting")
+			return
+		}
+	}
+
 	app.Logger().Info("Sending Import Completion Notification")
 
 	// Target audience: Active, notifications ON, on duty, credit card vertical, has FCM token
