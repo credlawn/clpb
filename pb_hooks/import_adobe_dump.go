@@ -23,6 +23,14 @@ func HandleImportAfterComplete(app core.App, collectionName string, jobId string
 }
 
 func processAdobeRow(rowData map[string]any) map[string]any {
+	// Manual Date Mapping using our global transformers
+	rowData["arn_date"] = TransformDateTime(rowData["arn_date"])
+	rowData["final_decision_date"] = TransformDate(rowData["final_decision_date"])
+	rowData["kyc_completion_date"] = TransformDate(rowData["kyc_completion_date"])
+	rowData["vkyc_expiry_date"] = TransformDateTime(rowData["vkyc_expiry_date"])
+	rowData["final_dap_submission_date"] = TransformDate(rowData["final_dap_submission_date"])
+
+	// Month formatting for reporting
 	if val, ok := rowData["arn_date"].(string); ok && val != "" {
 		rowData["arn_month"] = formatToMonthYear(val)
 	}
@@ -30,6 +38,7 @@ func processAdobeRow(rowData map[string]any) map[string]any {
 		rowData["decision_month"] = formatToMonthYear(val)
 	}
 
+	// Normalizing string fields
 	if val, ok := rowData["customer_name"].(string); ok {
 		rowData["customer_name"] = strings.ToUpper(val)
 	}

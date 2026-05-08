@@ -6,8 +6,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"strconv"
-	"strings"
 	"time"
 
 	"github.com/pocketbase/pocketbase/apis"
@@ -15,15 +13,6 @@ import (
 	"github.com/xuri/excelize/v2"
 )
 
-var istLocation *time.Location
-
-func init() {
-	var err error
-	istLocation, err = time.LoadLocation("Asia/Kolkata")
-	if err != nil {
-		istLocation = time.FixedZone("IST", 5*60*60+30*60)
-	}
-}
 
 func SetupImportWorker(app core.App) {
 	app.OnServe().BindFunc(func(se *core.ServeEvent) error {
@@ -74,10 +63,7 @@ func SetupImportWorker(app core.App) {
 
 			headers := []string{}
 			for _, h := range rows[0] {
-				trimmed := trimSpace(h)
-				if trimmed != "" {
-					headers = append(headers, trimmed)
-				}
+				headers = append(headers, h)
 			}
 
 			dbFields := []string{}
@@ -100,6 +86,7 @@ func SetupImportWorker(app core.App) {
 
 		return se.Next()
 	})
+
 
 	app.OnRecordAfterUpdateSuccess("import_jobs").BindFunc(func(e *core.RecordEvent) error {
 		status := e.Record.GetString("status")
@@ -238,7 +225,11 @@ func SetupImportWorker(app core.App) {
 			record.Set("created_records", 0)
 			record.Set("updated_records", 0)
 			record.Set("skipped_records", 0)
-			record.Set("import_date", time.Now().UTC().Format(time.RFC3339))
+			effectiveDate := record.GetString("import_date")
+			if effectiveDate == "" {
+				effectiveDate = time.Now().UTC().Format("2006-01-02T12:00:00.000Z")
+				record.Set("import_date", effectiveDate)
+			}
 			record.Set("status", "validating")
 			_ = app.Save(record)
 
@@ -250,7 +241,9 @@ func SetupImportWorker(app core.App) {
 			_ = app.Save(record)
 
 			for rowIdx, row := range dataRows {
-				rowData := make(map[string]any)
+				rowData := map[string]any{
+					"import_date": effectiveDate,
+				}
 				excelRowNum := rowIdx + 2
 
 				for dbField, excelCol := range fieldMapping {
@@ -260,32 +253,20 @@ func SetupImportWorker(app core.App) {
 						cellVal = cleanValue(row[idx])
 					}
 
+					// If it's a date field, we try to get the Raw Value (numeric) from Excel
+					// but we don't convert it yet. We pass the raw value to rowData.
 					if dateFields[dbField] {
-						parsed := false
 						if colLetter, ok := datColLetter[dbField]; ok {
 							cellRef := fmt.Sprintf("%s%d", colLetter, excelRowNum)
 							rawVal, _ := xlsx.GetCellValue(sheetName, cellRef, excelize.Options{RawCellValue: true})
 							rawVal = cleanValue(rawVal)
 							if rawVal != "" {
-								if f, err := strconv.ParseFloat(rawVal, 64); err == nil && f > 1 {
-									if t, err := excelize.ExcelDateToTime(f, false); err == nil {
-										tIST := time.Date(t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second(), 0, istLocation)
-										rowData[dbField] = tIST.UTC().Format("2006-01-02 15:04:05.000Z")
-										parsed = true
-									}
-								}
+								rowData[dbField] = rawVal
+							} else {
+								rowData[dbField] = cellVal
 							}
-						}
-
-						if !parsed && cellVal != "" {
-							if utcStr, ok := parseExcelDateToUTC(cellVal); ok {
-								rowData[dbField] = utcStr
-								parsed = true
-							}
-						}
-
-						if !parsed && cellVal != "" {
-							rowData[dbField] = nil
+						} else {
+							rowData[dbField] = cellVal
 						}
 					} else {
 						rowData[dbField] = cellVal
@@ -396,67 +377,3 @@ func SetupImportWorker(app core.App) {
 	})
 }
 
-func parseExcelDateToUTC(raw string) (string, bool) {
-	raw = strings.TrimSpace(raw)
-	if raw == "" {
-		return "", false
-	}
-
-	unambiguous := []string{
-		"2006-01-02 15:04:05", "2006-01-02T15:04:05", "2006-01-02T15:04:05Z",
-		"2006-01-02", "02-Jan-2006 15:04:05", "02-Jan-2006",
-		"02-Jan-06 15:04:05", "02-Jan-06",
-	}
-	for _, layout := range unambiguous {
-		if t, err := time.ParseInLocation(layout, raw, istLocation); err == nil {
-			if !strings.Contains(layout, "15:04") {
-				t = time.Date(t.Year(), t.Month(), t.Day(), 12, 0, 0, 0, istLocation)
-			}
-			return t.UTC().Format("2006-01-02 15:04:05.000Z"), true
-		}
-	}
-
-	slashLayouts := []string{
-		"02/01/2006 15:04:05", "02/01/2006 3:04:05 PM", "02/01/2006",
-	}
-	for _, layout := range slashLayouts {
-		if t, err := time.ParseInLocation(layout, raw, istLocation); err == nil {
-			if !strings.Contains(layout, "15:04") && !strings.Contains(layout, "PM") {
-				t = time.Date(t.Year(), t.Month(), t.Day(), 12, 0, 0, 0, istLocation)
-			}
-			return t.UTC().Format("2006-01-02 15:04:05.000Z"), true
-		}
-	}
-
-	return "", false
-}
-
-func trimSpace(s string) string { return strings.TrimSpace(s) }
-
-func formatToMonthYear(dateStr string) string {
-	t, err := time.Parse("2006-01-02 15:04:05.000Z", dateStr)
-	if err != nil {
-		t, err = time.Parse("2006-01-02 15:04:05Z", dateStr)
-	}
-	if err != nil {
-		return ""
-	}
-	return t.Format("Jan-06")
-}
-
-func cleanValue(s string) string {
-	v := strings.TrimSpace(s)
-	if v == "" || v == "-" || v == "." {
-		return ""
-	}
-	upper := strings.ToUpper(v)
-	if upper == "#N/A" || upper == "#VALUE!" || upper == "#REF!" || upper == "NULL" {
-		return ""
-	}
-	return v
-}
-
-func marshalMapping(m map[string]string) string {
-	b, _ := json.Marshal(m)
-	return string(b)
-}
